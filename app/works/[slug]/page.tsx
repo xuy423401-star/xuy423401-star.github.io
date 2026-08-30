@@ -59,9 +59,9 @@ export default async function WorkPage({
   return (
     <main className="detail-page" data-accent={work.accent}>
       <header className="detail-header">
-        <a href={withBasePath('/#atlas')} className="detail-back">
+        <a href={withBasePath(`/#${work.slug}`)} className="detail-back">
           <ArrowLeft size={16} aria-hidden="true" />
-          返回作品图谱
+          返回逐幅展览
         </a>
         <a href={withBasePath('/')} className="detail-wordmark">线迹之间</a>
         <span>WORK {work.number} / {String(works.length).padStart(2, '0')}</span>

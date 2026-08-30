@@ -345,7 +345,7 @@ export default function WhiteCubeGallery() {
             <Footprints size={17} aria-hidden="true" />
             进入漫游
           </button>
-          <a href={withBasePath('/#prologue')}>改用沉浸展页浏览</a>
+          <a href={withBasePath('/#08-night-sea')}>改用逐幅展页浏览</a>
         </section>
       )}
 
@@ -353,7 +353,7 @@ export default function WhiteCubeGallery() {
         <div className="tour-hud">
           <span className="crosshair" aria-hidden="true" />
           <p><Move size={15} /> {touchMode ? '方向键移动 · 轻触作品' : 'WASD 移动 · 拖动鼠标环顾 · ESC 暂停'}</p>
-          <a href={withBasePath('/#atlas')}><Grid3X3 size={15} /> 作品图谱</a>
+          <a href={withBasePath('/#08-night-sea')}><Grid3X3 size={15} /> 逐幅展页</a>
         </div>
       )}
 
