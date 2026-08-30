@@ -3,7 +3,6 @@
 import { Canvas, type ThreeEvent, useFrame, useLoader, useThree } from '@react-three/fiber';
 import { ArrowLeft, ChevronLeft, ChevronRight, Footprints, Grid3X3, Info, Move, X } from 'lucide-react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { MathUtils, SRGBColorSpace, TextureLoader, Vector3 } from 'three';
 import { getWork, works, type Work } from '@/lib/works';
@@ -41,22 +40,52 @@ function Player({ movement, enabled }: { movement: Set<MoveKey>; enabled: boolea
 
 function FirstPersonLook({ enabled }: { enabled: boolean }) {
   const { camera, gl } = useThree();
+  const dragging = useRef(false);
+  const lastPosition = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     camera.rotation.order = 'YXZ';
+    const canvas = gl.domElement;
 
-    const look = (event: MouseEvent) => {
-      if (!enabled || document.pointerLockElement !== gl.domElement) return;
-      camera.rotation.y -= event.movementX * 0.0018;
+    const startLook = (event: PointerEvent) => {
+      if (!enabled) return;
+      dragging.current = true;
+      lastPosition.current = { x: event.clientX, y: event.clientY };
+      canvas.setPointerCapture?.(event.pointerId);
+      canvas.style.cursor = 'grabbing';
+    };
+
+    const look = (event: PointerEvent) => {
+      if (!enabled || !dragging.current) return;
+      const deltaX = event.clientX - lastPosition.current.x;
+      const deltaY = event.clientY - lastPosition.current.y;
+      lastPosition.current = { x: event.clientX, y: event.clientY };
+      camera.rotation.y -= deltaX * 0.004;
       camera.rotation.x = MathUtils.clamp(
-        camera.rotation.x - event.movementY * 0.0018,
+        camera.rotation.x - deltaY * 0.004,
         -Math.PI / 2.15,
         Math.PI / 2.15,
       );
     };
 
-    document.addEventListener('mousemove', look);
-    return () => document.removeEventListener('mousemove', look);
+    const endLook = () => {
+      dragging.current = false;
+      canvas.style.cursor = enabled ? 'grab' : '';
+    };
+
+    canvas.style.cursor = enabled ? 'grab' : '';
+    canvas.addEventListener('pointerdown', startLook);
+    window.addEventListener('pointermove', look);
+    window.addEventListener('pointerup', endLook);
+    window.addEventListener('pointercancel', endLook);
+    return () => {
+      dragging.current = false;
+      canvas.style.cursor = '';
+      canvas.removeEventListener('pointerdown', startLook);
+      window.removeEventListener('pointermove', look);
+      window.removeEventListener('pointerup', endLook);
+      window.removeEventListener('pointercancel', endLook);
+    };
   }, [camera, enabled, gl.domElement]);
 
   return null;
@@ -194,19 +223,23 @@ function LoadingGallery() {
 
 export default function WhiteCubeGallery() {
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
-  const [locked, setLocked] = useState(false);
+  const [desktopActive, setDesktopActive] = useState(false);
   const [touchMode, setTouchMode] = useState(false);
   const [touchActive, setTouchActive] = useState(false);
   const [movement, setMovement] = useState<Set<MoveKey>>(new Set());
-  const [canvasElement, setCanvasElement] = useState<HTMLCanvasElement | null>(null);
   const selected = useMemo(() => (selectedSlug ? getWork(selectedSlug) : undefined), [selectedSlug]);
   const selectedIndex = selected ? works.findIndex((work) => work.slug === selected.slug) : -1;
-  const active = touchMode ? touchActive : locked;
+  const active = touchMode ? touchActive : desktopActive;
 
   useEffect(() => {
     setTouchMode(window.matchMedia('(pointer: coarse)').matches);
 
     const down = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setDesktopActive(false);
+        setMovement(new Set());
+        return;
+      }
       const keyMap: Record<string, MoveKey | undefined> = {
         w: 'forward',
         ArrowUp: 'forward',
@@ -247,16 +280,6 @@ export default function WhiteCubeGallery() {
     };
   }, []);
 
-  useEffect(() => {
-    if (selectedSlug && document.pointerLockElement) document.exitPointerLock();
-  }, [selectedSlug]);
-
-  useEffect(() => {
-    const updateLock = () => setLocked(document.pointerLockElement === canvasElement);
-    document.addEventListener('pointerlockchange', updateLock);
-    return () => document.removeEventListener('pointerlockchange', updateLock);
-  }, [canvasElement]);
-
   const hold = (key: MoveKey, pressed: boolean) => {
     setMovement((current) => {
       const next = new Set(current);
@@ -279,17 +302,16 @@ export default function WhiteCubeGallery() {
         dpr={[1, 1.75]}
         camera={{ position: [0, 1.7, 22], fov: 61, near: 0.1, far: 80 }}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
-        onCreated={({ gl }) => setCanvasElement(gl.domElement)}
       >
         <Suspense fallback={<LoadingGallery />}>
           <GalleryArchitecture onSelect={setSelectedSlug} />
         </Suspense>
         <Player movement={movement} enabled={active && !selected} />
-        <FirstPersonLook enabled={!touchMode && !selected} />
+        <FirstPersonLook enabled={!touchMode && active && !selected} />
       </Canvas>
 
       <header className="tour-header">
-        <Link href="/" className="tour-back"><ArrowLeft size={16} /> 退出展厅</Link>
+        <a href="/" className="tour-back"><ArrowLeft size={16} /> 退出展厅</a>
         <strong>线迹之间</strong>
         <span>WHITE CUBE · 16 WORKS</span>
       </header>
@@ -307,28 +329,28 @@ export default function WhiteCubeGallery() {
           <p>
             {touchMode
               ? '使用屏幕方向键前进、后退和转向，轻触墙上的作品查看。'
-              : '点击进入后，用鼠标环顾，WASD 或方向键移动；将准星对准作品并点击。'}
+              : '点击进入后，按住鼠标拖动画面环顾，WASD 或方向键移动；点击墙上的作品查看。'}
           </p>
           <button
             id="tour-enter"
             type="button"
             onClick={() => {
               if (touchMode) setTouchActive(true);
-              else canvasElement?.requestPointerLock();
+              else setDesktopActive(true);
             }}
           >
             <Footprints size={17} aria-hidden="true" />
             进入漫游
           </button>
-          <Link href="/#exhibition">改用策展长卷浏览</Link>
+          <a href="/#exhibition">改用策展长卷浏览</a>
         </section>
       )}
 
       {active && !selected && (
         <div className="tour-hud">
           <span className="crosshair" aria-hidden="true" />
-          <p><Move size={15} /> {touchMode ? '方向键移动 · 轻触作品' : 'WASD 移动 · 鼠标环顾 · ESC 暂停'}</p>
-          <Link href="/#atlas"><Grid3X3 size={15} /> 作品图谱</Link>
+          <p><Move size={15} /> {touchMode ? '方向键移动 · 轻触作品' : 'WASD 移动 · 拖动鼠标环顾 · ESC 暂停'}</p>
+          <a href="/#atlas"><Grid3X3 size={15} /> 作品图谱</a>
         </div>
       )}
 
@@ -381,7 +403,7 @@ export default function WhiteCubeGallery() {
             <span>{selected.englishTitle}</span>
             <p>{selected.note}</p>
             {selected.context && <p className="context-note">{selected.context}</p>}
-            <Link href={`/works/${selected.slug}`}><Info size={15} /> 完整作品页</Link>
+            <a href={`/works/${selected.slug}`}><Info size={15} /> 完整作品页</a>
           </div>
           <div className="tour-card-nav">
             <button type="button" onClick={() => moveSelection(-1)} aria-label="上一幅作品"><ChevronLeft /></button>

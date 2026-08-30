@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { ArrowDown, ArrowUpRight, ChevronLeft, ChevronRight, Grid3X3, Maximize2, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { chapters, getWork, works, type Work } from '@/lib/works';
@@ -50,9 +49,9 @@ function WorkPanel({
           <p className="work-english">{work.englishTitle}</p>
         </div>
         <p className="work-short">{work.short}</p>
-        <Link className="detail-link" href={`/works/${work.slug}`}>
+        <a className="detail-link" href={`/works/${work.slug}`}>
           作品详情 <ArrowUpRight size={14} aria-hidden="true" />
-        </Link>
+        </a>
       </div>
     </article>
   );
@@ -114,7 +113,7 @@ export default function GalleryExperience() {
           线迹之间
         </a>
         <nav aria-label="主要导航">
-          <Link href="/gallery">3D 展厅</Link>
+          <a href="/gallery">3D 展厅</a>
           <a href="#exhibition">策展路线</a>
           <a href="#atlas">作品图谱</a>
         </nav>
@@ -137,10 +136,10 @@ export default function GalleryExperience() {
             一根线穿过夜、目光、动物与记忆。沿着它走，纸上的世界会一页页醒来。
           </p>
           <div className="hero-actions">
-            <Link className="enter-link" href="/gallery">
+            <a className="enter-link" href="/gallery">
               <span>进入 3D 白盒子</span>
               <ArrowUpRight size={17} aria-hidden="true" />
-            </Link>
+            </a>
             <a className="scroll-link" href="#exhibition">
               <span>沿策展长卷浏览</span>
               <ArrowDown size={15} aria-hidden="true" />
@@ -300,9 +299,9 @@ export default function GalleryExperience() {
             <p className="work-english">{openWork.englishTitle}</p>
             <p>{openWork.note}</p>
             {openWork.context && <p className="context-note">{openWork.context}</p>}
-            <Link href={`/works/${openWork.slug}`} className="lightbox-detail">
+            <a href={`/works/${openWork.slug}`} className="lightbox-detail">
               打开作品页 <ArrowUpRight size={15} aria-hidden="true" />
-            </Link>
+            </a>
           </aside>
 
           <div className="lightbox-nav" aria-label="切换作品">

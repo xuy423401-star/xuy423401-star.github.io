@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
-import Link from 'next/link';
 import { ArrowLeft, ArrowRight, Maximize2 } from 'lucide-react';
 import { getWork, works } from '@/lib/works';
 import { notFound } from 'next/navigation';
@@ -59,11 +58,11 @@ export default async function WorkPage({
   return (
     <main className="detail-page" data-accent={work.accent}>
       <header className="detail-header">
-        <Link href="/#atlas" className="detail-back">
+        <a href="/#atlas" className="detail-back">
           <ArrowLeft size={16} aria-hidden="true" />
           返回作品图谱
-        </Link>
-        <Link href="/" className="detail-wordmark">线迹之间</Link>
+        </a>
+        <a href="/" className="detail-wordmark">线迹之间</a>
         <span>WORK {work.number} / {String(works.length).padStart(2, '0')}</span>
       </header>
 
@@ -98,14 +97,14 @@ export default async function WorkPage({
       </article>
 
       <nav className="detail-navigation" aria-label="前后作品">
-        <Link href={`/works/${previous.slug}`}>
+        <a href={`/works/${previous.slug}`}>
           <ArrowLeft size={18} aria-hidden="true" />
           <span><small>上一幅</small>{previous.title}</span>
-        </Link>
-        <Link href={`/works/${next.slug}`}>
+        </a>
+        <a href={`/works/${next.slug}`}>
           <span><small>下一幅</small>{next.title}</span>
           <ArrowRight size={18} aria-hidden="true" />
-        </Link>
+        </a>
       </nav>
     </main>
   );
