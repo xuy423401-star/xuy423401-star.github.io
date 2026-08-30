@@ -2,7 +2,7 @@
 
 /* oxlint-disable react/react-compiler */
 
-import { Music2, Pause, Play } from 'lucide-react';
+import { ChevronUp, Music2, Pause, Play } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getArtworkSoundtrack, type ArtworkSoundtrack } from '@/lib/soundtracks';
 import { withBasePath } from '@/lib/paths';
@@ -137,27 +137,53 @@ export function SoundtrackButton({
   onToggle: () => void;
   className?: string;
 }) {
+  const [collapsed, setCollapsed] = useState(false);
   if (!soundtrack) return null;
   const playing = status === 'playing';
   const label = status === 'blocked' ? '点击开启' : playing ? '正在播放' : '播放音乐';
 
+  if (collapsed) {
+    return (
+      <div className={`soundtrack-button is-collapsed ${className}`.trim()}>
+        <button
+          type="button"
+          className="soundtrack-collapse-tab"
+          onClick={() => setCollapsed(false)}
+          aria-label={`展开音乐播放器（${playing ? '正在播放' : '已暂停'}：${soundtrack.title}）`}
+        >
+          {playing ? <Pause size={15} /> : <Music2 size={15} />}
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <button
-      type="button"
-      className={`soundtrack-button ${playing ? 'is-playing' : ''} ${className}`.trim()}
-      onClick={onToggle}
-      aria-label={`${playing ? '暂停' : '播放'}${soundtrack.title}`}
-      aria-pressed={playing}
-    >
-      <span className="soundtrack-button-icon" aria-hidden="true">
-        {playing ? <Pause size={13} /> : status === 'blocked' ? <Play size={13} /> : <Music2 size={13} />}
-      </span>
-      <span className="soundtrack-button-copy">
-        <small>{label} · 配乐</small>
-        <strong>{soundtrack.title}</strong>
-      </span>
-      <span className="soundtrack-equalizer" aria-hidden="true"><i /><i /><i /></span>
-    </button>
+    <div className={`soundtrack-button ${playing ? 'is-playing' : ''} ${className}`.trim()}>
+      <button
+        type="button"
+        className="soundtrack-main"
+        onClick={onToggle}
+        aria-label={`${playing ? '暂停' : '播放'}${soundtrack.title}`}
+        aria-pressed={playing}
+      >
+        <span className="soundtrack-button-icon" aria-hidden="true">
+          {playing ? <Pause size={13} /> : status === 'blocked' ? <Play size={13} /> : <Music2 size={13} />}
+        </span>
+        <span className="soundtrack-button-copy">
+          <small>{label} · 配乐</small>
+          <strong>{soundtrack.title}</strong>
+        </span>
+        <span className="soundtrack-equalizer" aria-hidden="true"><i /><i /><i /></span>
+      </button>
+      <button
+        type="button"
+        className="soundtrack-collapse"
+        onClick={() => setCollapsed(true)}
+        aria-label="收起音乐播放器"
+      >
+        <ChevronUp size={14} aria-hidden="true" />
+      </button>
+    </div>
   );
 }
 

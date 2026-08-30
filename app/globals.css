@@ -3923,16 +3923,15 @@ body:has(.depth-experience) {
 .soundtrack-button {
   display: inline-grid;
   min-width: 13.5rem;
-  grid-template-columns: 2rem 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: .7rem;
+  gap: .3rem;
   border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
-  padding: .58rem .72rem;
+  padding: .28rem .32rem .28rem .72rem;
   background: color-mix(in srgb, currentColor 4%, transparent);
   color: inherit;
   text-align: left;
-  cursor: pointer;
-  transition: border-color .25s ease, background .25s ease, transform .25s ease;
+  transition: border-color .25s ease, background .25s ease, transform .25s ease, width .25s ease;
 }
 
 .soundtrack-button:hover,
@@ -3940,6 +3939,60 @@ body:has(.depth-experience) {
   border-color: color-mix(in srgb, currentColor 48%, transparent);
   background: color-mix(in srgb, currentColor 8%, transparent);
   transform: translateY(-1px);
+}
+
+.soundtrack-main {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .7rem;
+  border: 0;
+  padding: .3rem 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.soundtrack-collapse,
+.soundtrack-collapse-tab {
+  display: grid;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: background .2s ease, transform .2s ease;
+}
+
+.soundtrack-collapse { width: 1.45rem; height: 1.45rem; }
+.soundtrack-collapse:hover,
+.soundtrack-collapse:focus-visible { background: color-mix(in srgb, currentColor 12%, transparent); transform: translateY(-1px); }
+
+.soundtrack-collapse-tab {
+  width: 2.65rem;
+  height: 2.65rem;
+  border-color: rgba(255,255,255,.5);
+  background: rgba(10,10,10,.82);
+  color: white;
+  box-shadow: 0 1rem 2rem rgba(0,0,0,.22);
+  backdrop-filter: blur(12px);
+}
+
+.soundtrack-collapse-tab:hover,
+.soundtrack-collapse-tab:focus-visible { background: rgba(10,10,10,.95); transform: scale(1.04); }
+
+.soundtrack-button.is-collapsed {
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  background: none;
+}
+
+.depth-floating-soundtrack.is-collapsed {
+  width: auto;
 }
 
 .soundtrack-button-icon {
@@ -3998,7 +4051,7 @@ body:has(.depth-experience) {
   backdrop-filter: blur(12px);
 }
 
-.depth-floating-soundtrack[aria-pressed='false'] .soundtrack-button-copy small { color: #f0c98b; opacity: .9; }
+.depth-floating-soundtrack .soundtrack-main[aria-pressed='false'] .soundtrack-button-copy small { color: #f0c98b; opacity: .9; }
 
 .depth-floating-soundtrack:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 
@@ -4010,13 +4063,16 @@ body:has(.depth-experience) {
 @media (max-width: 650px) {
   .soundtrack-button {
     min-width: 0;
-    grid-template-columns: 1.75rem minmax(0, 1fr) auto;
-    gap: .55rem;
-    padding: .42rem .55rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: .25rem;
+    padding: .22rem .3rem .22rem .55rem;
   }
 
+  .soundtrack-main { grid-template-columns: 1.75rem minmax(0, 1fr) auto; gap: .55rem; }
   .soundtrack-button-icon { width: 1.75rem; height: 1.75rem; }
   .soundtrack-button-copy strong { font-size: .7rem; }
+  .soundtrack-collapse { width: 1.3rem; height: 1.3rem; }
+  .soundtrack-collapse-tab { width: 2.45rem; height: 2.45rem; }
   .depth-work-soundtrack { margin-top: .55rem; }
   .depth-floating-soundtrack { top: 4.25rem; right: 1rem; width: min(14rem, calc(100vw - 2rem)); }
 }
