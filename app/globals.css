@@ -3007,6 +3007,30 @@ body:has(.depth-experience) {
   }
 }
 
+/* Keep chapter numbers in their own line instead of behind the title. */
+
+.depth-chapter-number {
+  position: static;
+  z-index: auto;
+  display: block;
+  margin: 0 0 1.1rem;
+  color: var(--chapter-accent);
+  font-family: var(--font-serif);
+  font-size: clamp(3.2rem, 5vw, 5.4rem);
+  letter-spacing: -.08em;
+  line-height: .72;
+  opacity: .42;
+}
+
+@media (max-width: 650px) {
+  .depth-chapter-number {
+    position: static;
+    margin: 0 0 .65rem;
+    font-size: 2.8rem;
+    line-height: .78;
+  }
+}
+
 @keyframes gaze-breathe {
   0%, 100% { opacity: .025; transform: scale(1); }
   50% { opacity: .065; transform: scale(1.025); }
