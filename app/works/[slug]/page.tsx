@@ -87,8 +87,10 @@ export default async function WorkPage({
           <h1 id="work-title">{work.title}</h1>
           <p className="work-english">{work.englishTitle}</p>
           <p className="detail-short">{work.short}</p>
-          <p className="detail-note">{work.note}</p>
           {work.context && <p className="context-note">{work.context}</p>}
+          <a className="detail-reading-link" href="#reading">
+            阅读完整解读 <ArrowRight size={15} aria-hidden="true" />
+          </a>
           <dl>
             <div><dt>类型</dt><dd>纸上作品</dd></div>
             <div><dt>展览</dt><dd>《线迹之间》</dd></div>
@@ -96,6 +98,29 @@ export default async function WorkPage({
           </dl>
         </section>
       </article>
+
+      <section className="detail-essay" id="reading" aria-labelledby="reading-title">
+        <header className="detail-essay-header">
+          <p>CURATORIAL READING · 作品解读</p>
+          <h2 id="reading-title">在画面之外，<br />继续停留</h2>
+          <span>视觉并不止于看见。形式、思想与故事，让每一幅纸上作品拥有更长的回声。</span>
+        </header>
+
+        <div className="detail-reading-grid">
+          <article className="detail-reading-card">
+            <header><span>01</span><h3>画面细读</h3></header>
+            <p>{work.note}</p>
+          </article>
+          <article className="detail-reading-card">
+            <header><span>02</span><h3>思想解读</h3></header>
+            <p>{work.interpretation}</p>
+          </article>
+          <article className="detail-reading-card is-story">
+            <header><span>03</span><h3>画外故事</h3></header>
+            <p>{work.story}</p>
+          </article>
+        </div>
+      </section>
 
       <nav className="detail-navigation" aria-label="前后作品">
         <a href={withBasePath(`/works/${previous.slug}/`)}>

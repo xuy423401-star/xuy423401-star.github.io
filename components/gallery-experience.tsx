@@ -143,7 +143,7 @@ function WorkDialog({
         <p>{work.note}</p>
         {work.context && <p className="context-note">{work.context}</p>}
         <a href={withBasePath(`/works/${work.slug}/`)} className="lightbox-detail">
-          打开独立作品页 <ArrowUpRight size={15} aria-hidden="true" />
+          阅读完整作品解读 <ArrowUpRight size={15} aria-hidden="true" />
         </a>
       </aside>
 
@@ -206,7 +206,7 @@ function ArtworkScene({
         <h2>{work.title}</h2>
         <i>{work.englishTitle}</i>
         <strong>{work.short}</strong>
-        <span className="depth-work-note">{work.note}</span>
+        <span className="depth-work-note">{work.note.split('。')[0]}。</span>
         {work.context && <small>{work.context}</small>}
         <button type="button" onClick={() => onOpen(work.slug)}>
           放大作品与说明 <ArrowUpRight size={15} aria-hidden="true" />

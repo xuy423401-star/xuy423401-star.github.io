@@ -854,6 +854,143 @@ img { max-width: 100%; }
 .detail-copy dt { opacity: .5; }
 .detail-copy dd { margin: 0; }
 
+.detail-reading-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .7rem;
+  margin-top: 1.5rem;
+  border-bottom: 1px solid currentColor;
+  padding-bottom: .45rem;
+  font-size: .66rem;
+  letter-spacing: .12em;
+}
+
+.detail-reading-link svg { transition: transform .25s ease; }
+.detail-reading-link:hover svg,
+.detail-reading-link:focus-visible svg { transform: translateX(.25rem); }
+
+.detail-essay {
+  scroll-margin-top: 2rem;
+  padding: clamp(4.5rem, 8vw, 8rem) 4vw;
+  border-top: 1px solid var(--line);
+  background: #e9e4da;
+}
+
+.detail-essay-header {
+  display: grid;
+  max-width: 82rem;
+  grid-template-columns: minmax(14rem, .6fr) minmax(20rem, 1.4fr);
+  margin: 0 auto;
+  gap: 1rem 5vw;
+}
+
+.detail-essay-header > p {
+  margin: .6rem 0 0;
+  color: var(--blue);
+  font-size: .58rem;
+  font-weight: 700;
+  letter-spacing: .18em;
+}
+
+.detail-page[data-accent='red'] .detail-essay-header > p { color: var(--red); }
+.detail-page[data-accent='green'] .detail-essay-header > p { color: var(--green); }
+
+.detail-essay-header h2 {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(3.5rem, 7vw, 7.5rem);
+  font-weight: 400;
+  letter-spacing: -.075em;
+  line-height: .92;
+}
+
+.detail-essay-header > span {
+  max-width: 24rem;
+  align-self: end;
+  font-family: var(--font-serif);
+  font-size: .85rem;
+  line-height: 1.9;
+  opacity: .65;
+}
+
+.detail-reading-grid {
+  display: grid;
+  max-width: 82rem;
+  grid-template-columns: 1fr 1fr;
+  margin: clamp(3rem, 6vw, 6rem) auto 0;
+  border: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.detail-reading-card {
+  min-width: 0;
+  padding: clamp(2rem, 4vw, 4rem);
+}
+
+.detail-reading-card + .detail-reading-card { border-left: 1px solid var(--line); }
+
+.detail-reading-card header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.detail-reading-card header span {
+  color: var(--blue);
+  font-size: .58rem;
+  font-weight: 700;
+  letter-spacing: .15em;
+}
+
+.detail-page[data-accent='red'] .detail-reading-card:not(.is-story) header span { color: var(--red); }
+.detail-page[data-accent='green'] .detail-reading-card:not(.is-story) header span { color: var(--green); }
+
+.detail-reading-card h3 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.45rem;
+  font-weight: 400;
+}
+
+.detail-reading-card > p {
+  margin: 1.5rem 0 0;
+  color: var(--ink-soft);
+  font-family: var(--font-serif);
+  font-size: .94rem;
+  line-height: 2.15;
+}
+
+.detail-reading-card.is-story {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(9rem, .35fr) minmax(0, 1.65fr);
+  gap: 3vw;
+  border-top: 1px solid var(--line);
+  border-left: 0;
+  background: #1b1b19;
+  color: #f1ede4;
+}
+
+.detail-reading-card.is-story header {
+  align-self: start;
+  border-color: rgba(255,255,255,.22);
+}
+
+.detail-reading-card.is-story header span { color: #d1a49d; }
+
+.detail-reading-card.is-story > p {
+  max-width: 58rem;
+  margin: 0;
+  color: inherit;
+  font-size: 1.04rem;
+  line-height: 2.2;
+  opacity: .88;
+}
+
 .detail-navigation {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -3744,4 +3881,39 @@ body:has(.depth-experience) {
     filter: none;
     transform: translate3d(0, 0, 180px) scale(1.015);
   }
+}
+
+@media (max-width: 900px) {
+  .detail-essay-header {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-essay-header h2 {
+    grid-column: 1;
+    grid-row: auto;
+    margin-top: 1.2rem;
+  }
+
+  .detail-essay-header > span { margin-top: 1rem; }
+
+  .detail-reading-grid { grid-template-columns: 1fr; }
+
+  .detail-reading-card + .detail-reading-card {
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+
+  .detail-reading-card.is-story {
+    grid-column: 1;
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 650px) {
+  .detail-essay { padding: 4rem 1.35rem; }
+  .detail-essay-header h2 { font-size: clamp(3.2rem, 16vw, 4.8rem); }
+  .detail-reading-card { padding: 1.6rem 1.35rem 2rem; }
+  .detail-reading-card > p { font-size: .88rem; line-height: 2; }
+  .detail-reading-card.is-story > p { font-size: .94rem; line-height: 2.05; }
 }
