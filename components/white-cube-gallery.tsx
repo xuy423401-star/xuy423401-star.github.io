@@ -345,7 +345,7 @@ export default function WhiteCubeGallery() {
             <Footprints size={17} aria-hidden="true" />
             进入漫游
           </button>
-          <a href={withBasePath('/#exhibition')}>改用策展长卷浏览</a>
+          <a href={withBasePath('/#prologue')}>改用沉浸展页浏览</a>
         </section>
       )}
 

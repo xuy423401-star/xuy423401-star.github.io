@@ -1,316 +1,444 @@
 'use client';
 
+/* oxlint-disable react/react-compiler */
+
 import Image from 'next/image';
-import { ArrowDown, ArrowUpRight, ChevronLeft, ChevronRight, Grid3X3, Maximize2, X } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpRight,
+  ChevronLeft,
+  ChevronRight,
+  Maximize2,
+  X,
+} from 'lucide-react';
+import {
+  type CSSProperties,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { chapters, getWork, works, type Work } from '@/lib/works';
 import { withBasePath } from '@/lib/paths';
 
-function WorkPanel({
-  work,
-  index,
+const scenes = [
+  { id: 'cover', label: '序幕', title: '线迹之间' },
+  { id: 'prologue', label: '序章', title: '一根线进入夜' },
+  { id: 'gaze', label: '第一章', title: '凝视' },
+  { id: 'borrowed', label: '第二章', title: '借来的世界' },
+  { id: 'cycle', label: '第三章', title: '生长与消逝' },
+  { id: 'atlas', label: '作品图谱', title: '所有线仍在继续' },
+  { id: 'about', label: '尾声', title: '纸面没有边界' },
+] as const;
+
+type DepthStyle = CSSProperties & {
+  '--depth-offset': number;
+};
+
+function ChapterScene({
+  chapter,
   onOpen,
 }: {
-  work: Work;
-  index: number;
+  chapter: (typeof chapters)[number];
   onOpen: (slug: string) => void;
 }) {
-  const portrait = work.height > work.width * 1.08;
+  const chapterWorks = chapter.slugs.map((slug) => getWork(slug)!);
 
   return (
-    <article
-      className={`work-panel work-panel-${index % 5} ${portrait ? 'is-portrait' : 'is-landscape'}`}
-      data-accent={work.accent}
-    >
-      <figure className="work-figure">
-        <button
-          type="button"
-          className="work-open"
-          onClick={() => onOpen(work.slug)}
-          aria-label={`放大查看《${work.title}》`}
-        >
-          <Image
-            src={withBasePath(work.image.large)}
-            alt={work.alt}
-            width={work.width}
-            height={work.height}
-            sizes={portrait ? '(max-width: 760px) 90vw, 47vw' : '(max-width: 760px) 92vw, 70vw'}
-          />
-          <span className="zoom-cue" aria-hidden="true">
-            <Maximize2 size={15} />
-            查看细节
-          </span>
-        </button>
-      </figure>
+    <div className="depth-chapter-layout">
+      <header className="depth-chapter-copy">
+        <p>CHAPTER {chapter.number} · {chapter.english}</p>
+        <h2>{chapter.title}</h2>
+        <span>{chapter.intro}</span>
+      </header>
 
-      <div className="work-caption">
-        <span className="work-number">{work.number}</span>
-        <div>
-          <h3>{work.title}</h3>
-          <p className="work-english">{work.englishTitle}</p>
-        </div>
-        <p className="work-short">{work.short}</p>
-        <a className="detail-link" href={withBasePath(`/works/${work.slug}/`)}>
-          作品详情 <ArrowUpRight size={14} aria-hidden="true" />
-        </a>
+      <div className="depth-art-grid">
+        {chapterWorks.map((work, index) => (
+          <button
+            type="button"
+            className={`depth-art-card depth-art-card-${index + 1}`}
+            onClick={() => onOpen(work.slug)}
+            key={work.slug}
+            aria-label={`查看《${work.title}》`}
+          >
+            <span className="depth-art-image">
+              <Image
+                src={withBasePath(work.image.thumb)}
+                alt={work.alt}
+                fill
+                sizes="(max-width: 720px) 44vw, 23vw"
+              />
+            </span>
+            <span className="depth-art-caption">
+              <b>{work.number}</b>
+              <span>{work.title}</span>
+              <i>{work.englishTitle}</i>
+            </span>
+          </button>
+        ))}
       </div>
-    </article>
+    </div>
+  );
+}
+
+function WorkDialog({
+  work,
+  onClose,
+  onMove,
+  closeRef,
+}: {
+  work: Work;
+  onClose: () => void;
+  onMove: (direction: number) => void;
+  closeRef: React.RefObject<HTMLButtonElement | null>;
+}) {
+  return (
+    <dialog open className="lightbox depth-lightbox" aria-modal="true" aria-labelledby="lightbox-title">
+      <button
+        ref={closeRef}
+        type="button"
+        className="lightbox-close"
+        onClick={onClose}
+        aria-label="关闭作品查看"
+      >
+        <X size={20} />
+      </button>
+
+      <div className="lightbox-image">
+        <Image
+          src={withBasePath(work.image.large)}
+          alt={work.alt}
+          fill
+          preload
+          sizes="(max-width: 800px) 100vw, 76vw"
+        />
+      </div>
+
+      <aside className="lightbox-copy">
+        <p className="lightbox-count">{work.number} / {String(works.length).padStart(2, '0')}</p>
+        <h2 id="lightbox-title">{work.title}</h2>
+        <p className="work-english">{work.englishTitle}</p>
+        <p>{work.note}</p>
+        {work.context && <p className="context-note">{work.context}</p>}
+        <a href={withBasePath(`/works/${work.slug}/`)} className="lightbox-detail">
+          打开作品页 <ArrowUpRight size={15} aria-hidden="true" />
+        </a>
+      </aside>
+
+      <div className="lightbox-nav" aria-label="切换作品">
+        <button type="button" onClick={() => onMove(-1)} aria-label="上一幅作品">
+          <ChevronLeft size={22} />
+        </button>
+        <button type="button" onClick={() => onMove(1)} aria-label="下一幅作品">
+          <ChevronRight size={22} />
+        </button>
+      </div>
+    </dialog>
   );
 }
 
 export default function GalleryExperience() {
+  const [sceneIndex, setSceneIndex] = useState(0);
   const [openSlug, setOpenSlug] = useState<string | null>(null);
+  const transitionLock = useRef(false);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
-  const progressRef = useRef<HTMLSpanElement>(null);
   const openWork = useMemo(() => (openSlug ? getWork(openSlug) : undefined), [openSlug]);
   const openIndex = openWork ? works.findIndex((work) => work.slug === openWork.slug) : -1;
+  const prologue = getWork('08-night-sea')!;
 
-  const moveLightbox = useCallback((direction: number) => {
+  const goToScene = useCallback((target: number) => {
+    if (transitionLock.current) return;
+    const next = Math.max(0, Math.min(scenes.length - 1, target));
+    if (next === sceneIndex) return;
+
+    transitionLock.current = true;
+    setSceneIndex(next);
+    window.setTimeout(() => {
+      transitionLock.current = false;
+    }, 920);
+  }, [sceneIndex]);
+
+  const moveWork = useCallback((direction: number) => {
     if (openIndex < 0) return;
     const next = (openIndex + direction + works.length) % works.length;
     setOpenSlug(works[next].slug);
   }, [openIndex]);
 
   useEffect(() => {
-    const updateProgress = () => {
-      const max = document.documentElement.scrollHeight - window.innerHeight;
-      const ratio = max > 0 ? Math.min(1, window.scrollY / max) : 0;
-      progressRef.current?.style.setProperty('--scroll-progress', `${ratio * 100}%`);
-    };
-    updateProgress();
-    window.addEventListener('scroll', updateProgress, { passive: true });
-    window.addEventListener('resize', updateProgress);
-    return () => {
-      window.removeEventListener('scroll', updateProgress);
-      window.removeEventListener('resize', updateProgress);
-    };
+    const requestedIndex = scenes.findIndex((scene) => window.location.hash === `#${scene.id}`);
+    if (requestedIndex > 0) setSceneIndex(requestedIndex);
   }, []);
 
   useEffect(() => {
-    if (!openWork) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    closeRef.current?.focus();
+    const onWheel = (event: WheelEvent) => {
+      if (openWork || Math.abs(event.deltaY) < 18) return;
+      event.preventDefault();
+      goToScene(sceneIndex + (event.deltaY > 0 ? 1 : -1));
+    };
 
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpenSlug(null);
-      if (event.key === 'ArrowLeft') moveLightbox(-1);
-      if (event.key === 'ArrowRight') moveLightbox(1);
+      if (openWork) {
+        if (event.key === 'Escape') setOpenSlug(null);
+        if (event.key === 'ArrowLeft') moveWork(-1);
+        if (event.key === 'ArrowRight') moveWork(1);
+        return;
+      }
+
+      if (['ArrowDown', 'ArrowRight', 'PageDown', ' '].includes(event.key)) {
+        event.preventDefault();
+        goToScene(sceneIndex + 1);
+      }
+      if (['ArrowUp', 'ArrowLeft', 'PageUp'].includes(event.key)) {
+        event.preventDefault();
+        goToScene(sceneIndex - 1);
+      }
+      if (event.key === 'Home') goToScene(0);
+      if (event.key === 'End') goToScene(scenes.length - 1);
     };
 
+    window.addEventListener('wheel', onWheel, { passive: false });
     window.addEventListener('keydown', onKeyDown);
     return () => {
-      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('wheel', onWheel);
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [openWork, moveLightbox]);
+  }, [goToScene, moveWork, openWork, sceneIndex]);
 
-  const prologue = getWork('08-night-sea')!;
+  useEffect(() => {
+    if (openWork) closeRef.current?.focus();
+  }, [openWork]);
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLElement>) => {
+    if (event.pointerType !== 'touch') return;
+    touchStart.current = { x: event.clientX, y: event.clientY };
+  };
+
+  const handlePointerUp = (event: React.PointerEvent<HTMLElement>) => {
+    if (event.pointerType !== 'touch' || !touchStart.current || openWork) return;
+    const deltaX = event.clientX - touchStart.current.x;
+    const deltaY = event.clientY - touchStart.current.y;
+    touchStart.current = null;
+    const dominant = Math.abs(deltaY) > Math.abs(deltaX) ? deltaY : deltaX;
+    if (Math.abs(dominant) < 42) return;
+    goToScene(sceneIndex + (dominant < 0 ? 1 : -1));
+  };
+
+  const sceneState = (index: number) => {
+    const offset = index - sceneIndex;
+    if (offset < 0) return 'past';
+    if (offset === 0) return 'current';
+    if (offset === 1) return 'next';
+    return 'far';
+  };
 
   return (
-    <main id="top">
-      <header className="site-header">
-        <a className="wordmark" href="#top" aria-label="线迹之间，返回展览封面">
+    <main
+      className="depth-experience"
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+    >
+      <header className="depth-header">
+        <button type="button" className="depth-wordmark" onClick={() => goToScene(0)}>
           线迹之间
+        </button>
+        <span>{scenes[sceneIndex].label} · {scenes[sceneIndex].title}</span>
+        <a href={withBasePath('/gallery/')}>
+          3D 白盒子 <ArrowUpRight size={14} aria-hidden="true" />
         </a>
-        <nav aria-label="主要导航">
-          <a href={withBasePath('/gallery/')}>3D 展厅</a>
-          <a href="#exhibition">策展路线</a>
-          <a href="#atlas">作品图谱</a>
-        </nav>
-        <span className="edition">ONLINE EXHIBITION · 2026</span>
       </header>
 
-      <div className="scroll-trace" aria-hidden="true">
-        <span ref={progressRef} />
-      </div>
-
-      <section className="hero" aria-labelledby="exhibition-title">
-        <div className="hero-copy">
-          <p className="eyebrow">16 幅纸上世界的夜游</p>
-          <h1 id="exhibition-title">
-            线迹之间
-            <span>我所看见的，</span>
-            <span>与看见我的</span>
-          </h1>
-          <p className="hero-intro">
-            一根线穿过夜、目光、动物与记忆。沿着它走，纸上的世界会一页页醒来。
-          </p>
-          <div className="hero-actions">
-            <a className="enter-link" href={withBasePath('/gallery/')}>
-              <span>进入 3D 白盒子</span>
-              <ArrowUpRight size={17} aria-hidden="true" />
-            </a>
-            <a className="scroll-link" href="#exhibition">
-              <span>沿策展长卷浏览</span>
-              <ArrowDown size={15} aria-hidden="true" />
-            </a>
-          </div>
-        </div>
-
-        <figure className="hero-art">
-          <Image
-            src={withBasePath(prologue.image.large)}
-            alt={prologue.alt}
-            fill
-            priority
-            sizes="(max-width: 900px) 100vw, 68vw"
-          />
-          <figcaption>
-            <span>{prologue.number}</span>
-            <span>{prologue.title} · PROLOGUE</span>
-          </figcaption>
-        </figure>
-        <span className="hero-coordinate" aria-hidden="true">31°N / PAPER / INK</span>
-      </section>
-
-      <section className="prologue" id="exhibition" aria-labelledby="prologue-title">
-        <p className="section-kicker">PROLOGUE · 序章</p>
-        <h2 id="prologue-title">一根线进入夜</h2>
-        <p>{prologue.note}</p>
-        <button type="button" className="prologue-detail" onClick={() => setOpenSlug(prologue.slug)}>
-          <span>查看序章作品</span>
-          <Maximize2 size={15} aria-hidden="true" />
-        </button>
-      </section>
-
-      {chapters.map((chapter, chapterIndex) => (
+      <div className="depth-stage" aria-live="polite">
         <section
-          className={`chapter chapter-${chapter.id}`}
-          id={chapter.id}
-          key={chapter.id}
-          aria-labelledby={`chapter-${chapter.id}-title`}
+          className="depth-panel depth-cover"
+          data-state={sceneState(0)}
+          style={{ '--depth-offset': 0 - sceneIndex } as DepthStyle}
+          aria-hidden={sceneIndex !== 0}
+          inert={sceneIndex !== 0 ? true : undefined}
         >
-          <header className="chapter-header">
-            <div className="chapter-meta">
-              <span>CHAPTER {chapter.number}</span>
-              <span>{chapter.english}</span>
-            </div>
-            <h2 id={`chapter-${chapter.id}-title`}>{chapter.title}</h2>
-            <p>{chapter.intro}</p>
-            <span className="chapter-mark" aria-hidden="true">
-              {chapterIndex === 0 ? '●' : chapterIndex === 1 ? '□' : '○'}
-            </span>
-          </header>
+          <figure className="depth-cover-image">
+            <Image src={withBasePath(prologue.image.large)} alt={prologue.alt} fill preload sizes="100vw" />
+          </figure>
+          <div className="depth-cover-shade" />
+          <div className="depth-cover-copy">
+            <p>ONLINE EXHIBITION · 16 WORKS · 2026</p>
+            <h1>
+              线迹之间
+              <span>我所看见的，与看见我的</span>
+            </h1>
+            <p className="depth-intro">
+              一根线穿过夜、目光、动物与记忆。不是向下翻阅，而是向纸面深处进入。
+            </p>
+            <button type="button" className="depth-enter" onClick={() => goToScene(1)}>
+              向展览深处进入 <ArrowRight size={18} aria-hidden="true" />
+            </button>
+          </div>
+          <p className="depth-gesture">滚轮 · 轻扫 · 方向键　推进展页</p>
+        </section>
 
-          <div className="works-stage">
-            {chapter.slugs.map((slug, index) => {
-              const work = getWork(slug)!;
-              return <WorkPanel key={slug} work={work} index={index} onOpen={setOpenSlug} />;
-            })}
+        <section
+          className="depth-panel depth-prologue"
+          data-state={sceneState(1)}
+          style={{ '--depth-offset': 1 - sceneIndex } as DepthStyle}
+          aria-hidden={sceneIndex !== 1}
+          inert={sceneIndex !== 1 ? true : undefined}
+        >
+          <div className="depth-prologue-copy">
+            <p>PROLOGUE · 序章</p>
+            <h2>一根线<br />进入夜</h2>
+            <span>{prologue.note}</span>
+            <button type="button" onClick={() => setOpenSlug(prologue.slug)}>
+              查看《{prologue.title}》细节 <Maximize2 size={15} aria-hidden="true" />
+            </button>
+          </div>
+          <button
+            type="button"
+            className="depth-prologue-art"
+            onClick={() => setOpenSlug(prologue.slug)}
+            aria-label={`查看《${prologue.title}》`}
+          >
+            <Image
+              src={withBasePath(prologue.image.large)}
+              alt={prologue.alt}
+              fill
+              sizes="(max-width: 760px) 90vw, 60vw"
+            />
+            <span>08 · 夜海 / NIGHT SEA</span>
+          </button>
+        </section>
+
+        {chapters.map((chapter, chapterIndex) => {
+          const index = chapterIndex + 2;
+          return (
+            <section
+              className={`depth-panel depth-chapter depth-chapter-${chapter.id}`}
+              data-state={sceneState(index)}
+              style={{ '--depth-offset': index - sceneIndex } as DepthStyle}
+              aria-hidden={sceneIndex !== index}
+              inert={sceneIndex !== index ? true : undefined}
+              key={chapter.id}
+            >
+              <ChapterScene chapter={chapter} onOpen={setOpenSlug} />
+            </section>
+          );
+        })}
+
+        <section
+          className="depth-panel depth-atlas"
+          data-state={sceneState(5)}
+          style={{ '--depth-offset': 5 - sceneIndex } as DepthStyle}
+          aria-hidden={sceneIndex !== 5}
+          inert={sceneIndex !== 5 ? true : undefined}
+        >
+          <header className="depth-atlas-heading">
+            <p>ATLAS · 作品图谱</p>
+            <h2>所有线仍在继续</h2>
+            <span>选择任意一幅作品，让它从图谱中靠近你。</span>
+          </header>
+          <div className="depth-atlas-grid">
+            {works.map((work) => (
+              <button
+                type="button"
+                onClick={() => setOpenSlug(work.slug)}
+                key={work.slug}
+                aria-label={`打开《${work.title}》`}
+              >
+                <span>
+                  <Image
+                    src={withBasePath(work.image.thumb)}
+                    alt=""
+                    fill
+                    sizes="(max-width: 600px) 22vw, 11vw"
+                  />
+                </span>
+                <b>{work.number}</b>
+                <i>{work.title}</i>
+              </button>
+            ))}
           </div>
         </section>
-      ))}
 
-      <section className="atlas" id="atlas" aria-labelledby="atlas-title">
-        <header className="atlas-header">
-          <div>
-            <p className="section-kicker">ATLAS · 作品图谱</p>
-            <h2 id="atlas-title">所有线仍在继续</h2>
-          </div>
-          <p>从策展路线离开，按自己的顺序重新观看。每一幅作品都是另一条入口。</p>
-        </header>
-
-        <div className="atlas-grid">
-          {works.map((work) => (
-            <button
-              type="button"
-              className="atlas-item"
-              data-accent={work.accent}
-              onClick={() => setOpenSlug(work.slug)}
-              key={work.slug}
-              aria-label={`打开《${work.title}》`}
-            >
-              <span className="atlas-image">
-                <Image
-                  src={withBasePath(work.image.thumb)}
-                  alt=""
-                  fill
-                  sizes="(max-width: 600px) 46vw, (max-width: 1000px) 30vw, 23vw"
-                />
-              </span>
-              <span className="atlas-label">
-                <span>{work.number}</span>
-                <span>{work.title}</span>
-              </span>
+        <section
+          className="depth-panel depth-about"
+          data-state={sceneState(6)}
+          style={{ '--depth-offset': 6 - sceneIndex } as DepthStyle}
+          aria-hidden={sceneIndex !== 6}
+          inert={sceneIndex !== 6 ? true : undefined}
+        >
+          <div className="depth-about-mark" aria-hidden="true">○</div>
+          <div className="depth-about-copy">
+            <p>EPILOGUE · 尾声</p>
+            <h2>纸面没有边界</h2>
+            <span>
+              这场展览收录 16 幅纸上作品。它们从线条开始，又在你的观看中继续。现在，你可以进入真正的白盒空间，自由选择下一条路。
+            </span>
+            <a href={withBasePath('/gallery/')} className="depth-gallery-link">
+              进入 3D 白盒子漫游 <ArrowUpRight size={18} aria-hidden="true" />
+            </a>
+            <button type="button" onClick={() => goToScene(0)} className="depth-restart">
+              从序幕重新进入
             </button>
-          ))}
-        </div>
-      </section>
+          </div>
+          <div className="depth-about-numbers" aria-label="展览信息">
+            <span><b>16</b> 件作品</span>
+            <span><b>03</b> 个章节</span>
+            <span><b>01</b> 条未完成的线</span>
+          </div>
+        </section>
+      </div>
 
-      <section className="about" id="about" aria-labelledby="about-title">
-        <div className="about-heading">
-          <p className="section-kicker">ABOUT · 关于</p>
-          <h2 id="about-title">纸面没有边界</h2>
-        </div>
-        <div className="about-copy">
-          <p>
-            这场展览收录 16 幅纸上作品。它们没有共享单一题材，却都从线条开始：线条成为目光、毛发、波浪、枝条、文字，也成为通往另一幅画的道路。
-          </p>
-          <p>
-            展览保留纸张、折痕和手工痕迹。观看不要求从“正确答案”开始，只邀请你在熟悉与陌生之间多停留一会。
-          </p>
-        </div>
-        <div className="about-index" aria-label="展览信息">
-          <span><b>16</b> 件作品</span>
-          <span><b>03</b> 个章节</span>
-          <span><b>01</b> 条未完成的线</span>
-        </div>
-      </section>
+      <nav className="depth-progress" aria-label="展页导航">
+        {scenes.map((scene, index) => (
+          <button
+            type="button"
+            onClick={() => goToScene(index)}
+            className={index === sceneIndex ? 'is-current' : ''}
+            aria-label={`前往${scene.label}：${scene.title}`}
+            aria-current={index === sceneIndex ? 'step' : undefined}
+            key={scene.id}
+          >
+            <span>{String(index + 1).padStart(2, '0')}</span>
+          </button>
+        ))}
+      </nav>
 
-      <footer className="site-footer">
-        <a href="#top">返回夜的入口 ↑</a>
-        <p>《线迹之间》· ONLINE EXHIBITION · 2026</p>
-        <Grid3X3 size={18} aria-hidden="true" />
-      </footer>
+      <div className="depth-controls">
+        <button
+          type="button"
+          onClick={() => goToScene(sceneIndex - 1)}
+          disabled={sceneIndex === 0}
+          aria-label="上一展页"
+        >
+          <ArrowLeft size={17} />
+        </button>
+        <span>{String(sceneIndex + 1).padStart(2, '0')} / {String(scenes.length).padStart(2, '0')}</span>
+        <button
+          type="button"
+          onClick={() => goToScene(sceneIndex + 1)}
+          disabled={sceneIndex === scenes.length - 1}
+          aria-label="下一展页"
+        >
+          <ArrowRight size={17} />
+        </button>
+      </div>
+
+      {sceneIndex < scenes.length - 1 && (
+        <button type="button" className="depth-next-portal" onClick={() => goToScene(sceneIndex + 1)}>
+          <span>下一展页 · {String(sceneIndex + 2).padStart(2, '0')}</span>
+          <strong>{scenes[sceneIndex + 1].title}</strong>
+          <ArrowRight size={17} aria-hidden="true" />
+        </button>
+      )}
 
       {openWork && (
-        <dialog
-          open
-          className="lightbox"
-          aria-modal="true"
-          aria-labelledby="lightbox-title"
-        >
-          <button
-            ref={closeRef}
-            type="button"
-            className="lightbox-close"
-            onClick={() => setOpenSlug(null)}
-            aria-label="关闭作品查看"
-          >
-            <X size={20} />
-          </button>
-
-          <div className="lightbox-image">
-            <Image
-              src={withBasePath(openWork.image.large)}
-              alt={openWork.alt}
-              fill
-              priority
-              sizes="(max-width: 800px) 100vw, 76vw"
-            />
-          </div>
-
-          <aside className="lightbox-copy">
-            <p className="lightbox-count">{openWork.number} / {String(works.length).padStart(2, '0')}</p>
-            <h2 id="lightbox-title">{openWork.title}</h2>
-            <p className="work-english">{openWork.englishTitle}</p>
-            <p>{openWork.note}</p>
-            {openWork.context && <p className="context-note">{openWork.context}</p>}
-            <a href={withBasePath(`/works/${openWork.slug}/`)} className="lightbox-detail">
-              打开作品页 <ArrowUpRight size={15} aria-hidden="true" />
-            </a>
-          </aside>
-
-          <div className="lightbox-nav" aria-label="切换作品">
-            <button type="button" onClick={() => moveLightbox(-1)} aria-label="上一幅作品">
-              <ChevronLeft size={22} />
-            </button>
-            <button type="button" onClick={() => moveLightbox(1)} aria-label="下一幅作品">
-              <ChevronRight size={22} />
-            </button>
-          </div>
-        </dialog>
+        <WorkDialog
+          work={openWork}
+          onClose={() => setOpenSlug(null)}
+          onMove={moveWork}
+          closeRef={closeRef}
+        />
       )}
     </main>
   );
