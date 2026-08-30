@@ -25,36 +25,72 @@ import { chapters, getWork, works, type Work } from '@/lib/works';
 import { withBasePath } from '@/lib/paths';
 
 const chapterInfo = {
-  prologue: { label: '序章', english: 'PROLOGUE', title: '一根线进入夜' },
-  gaze: { label: '第一章', english: 'THE GAZE', title: '凝视' },
-  borrowed: { label: '第二章', english: 'BORROWED WORLDS', title: '借来的世界' },
-  cycle: { label: '第三章', english: 'GROWTH / AFTERLIFE', title: '生长与消逝' },
+  prologue: {
+    number: '00', label: '序章', english: 'PROLOGUE', title: '一根线进入夜',
+    intro: '月亮、海浪和一根遥远的细线，先为这次观看建立尺度。人在世界里很小，却仍可以成为方向。',
+    coverSlug: '08-night-sea',
+  },
+  gaze: {
+    number: '01', label: '第一章', english: 'THE GAZE', title: '凝视',
+    intro: '眼睛、动物与遮住面孔的人同时看向画外。观看不再是单向的：当你靠近作品，作品也在注视你。',
+    coverSlug: '03-blue-eyes',
+  },
+  borrowed: {
+    number: '02', label: '第二章', english: 'BORROWED WORLDS', title: '借来的世界',
+    intro: '游戏、动画、文学人物与名画被重新落到纸上。熟悉的世界经过手的描摹，成为新的个人记忆。',
+    coverSlug: '01-panel-city',
+  },
+  cycle: {
+    number: '03', label: '第三章', english: 'GROWTH / AFTERLIFE', title: '生长与消逝',
+    intro: '花、骨骼、月亮、桥与树沿着同一条线相遇。盛放和消逝不是终点，而是彼此继续生长的方式。',
+    coverSlug: '02-fractured-rose',
+  },
 } as const;
 
-const exhibitionOrder = [
-  '08-night-sea',
-  ...chapters.flatMap((chapter) => chapter.slugs),
+const exhibitionGroups = [
+  { chapter: 'prologue' as const, slugs: ['08-night-sea'] },
+  ...chapters.map((chapter) => ({ chapter: chapter.id, slugs: [...chapter.slugs] })),
 ];
+
+const exhibitionOrder = exhibitionGroups.flatMap((group) => group.slugs);
 
 const exhibitionWorks = exhibitionOrder.map((slug) => getWork(slug)!);
 
 type Scene = {
   id: string;
-  kind: 'cover' | 'work' | 'about';
+  kind: 'cover' | 'chapter' | 'work' | 'about';
   label: string;
   title: string;
+  chapter?: Work['chapter'];
   work?: Work;
 };
 
 const scenes: Scene[] = [
   { id: 'cover', kind: 'cover', label: '序幕', title: '线迹之间' },
-  ...exhibitionWorks.map((work, index) => ({
-    id: work.slug,
-    kind: 'work' as const,
-    label: `${chapterInfo[work.chapter].label} · ${String(index + 1).padStart(2, '0')} / 16`,
-    title: work.title,
-    work,
-  })),
+  ...exhibitionGroups.flatMap((group) => {
+    const info = chapterInfo[group.chapter];
+    return [
+      {
+        id: `chapter-${group.chapter}`,
+        kind: 'chapter' as const,
+        label: info.label,
+        title: info.title,
+        chapter: group.chapter,
+      },
+      ...group.slugs.map((slug) => {
+        const work = getWork(slug)!;
+        const workIndex = exhibitionWorks.findIndex((item) => item.slug === slug);
+        return {
+          id: work.slug,
+          kind: 'work' as const,
+          label: `${info.label} · ${String(workIndex + 1).padStart(2, '0')} / 16`,
+          title: work.title,
+          chapter: group.chapter,
+          work,
+        };
+      }),
+    ];
+  }),
   { id: 'about', kind: 'about', label: '尾声', title: '纸面没有边界' },
 ];
 
@@ -62,21 +98,9 @@ type DepthStyle = CSSProperties & {
   '--depth-offset': number;
 };
 
-type TransitionCue = {
-  id: number;
-  chapter: Work['chapter'] | 'cover' | 'about';
-  direction: 'forward' | 'backward';
-  chapterChange: boolean;
-};
-
 type ViewTransitionDocument = Document & {
   startViewTransition?: (update: () => void) => void;
 };
-
-function getSceneChapter(scene: Scene): TransitionCue['chapter'] {
-  if (scene.kind === 'work' && scene.work) return scene.work.chapter;
-  return scene.kind === 'about' ? 'about' : 'cover';
-}
 
 function WorkDialog({
   work,
@@ -199,12 +223,11 @@ export default function GalleryExperience() {
   const [sceneIndex, setSceneIndex] = useState(0);
   const [openSlug, setOpenSlug] = useState<string | null>(null);
   const [showOpening, setShowOpening] = useState(true);
-  const [transitionCue, setTransitionCue] = useState<TransitionCue | null>(null);
+  const [direction, setDirection] = useState<'forward' | 'backward'>('forward');
   const transitionLock = useRef(false);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const experienceRef = useRef<HTMLElement>(null);
-  const transitionId = useRef(0);
   const openWork = useMemo(() => (openSlug ? getWork(openSlug) : undefined), [openSlug]);
   const openIndex = openWork ? exhibitionWorks.findIndex((work) => work.slug === openWork.slug) : -1;
   const coverWork = getWork('08-night-sea')!;
@@ -236,26 +259,15 @@ export default function GalleryExperience() {
     const next = Math.max(0, Math.min(scenes.length - 1, target));
     if (next === sceneIndex) return;
 
-    const currentScene = scenes[sceneIndex];
     const nextScene = scenes[next];
-    const direction = next > sceneIndex ? 'forward' : 'backward';
-    const nextChapter = getSceneChapter(nextScene);
-    const currentChapter = getSceneChapter(currentScene);
-
-    transitionId.current += 1;
-    setTransitionCue({
-      id: transitionId.current,
-      chapter: nextChapter,
-      direction,
-      chapterChange: currentChapter !== nextChapter,
-    });
+    setDirection(next > sceneIndex ? 'forward' : 'backward');
 
     transitionLock.current = true;
     setSceneIndex(next);
     window.history.replaceState(null, '', next === 0 ? window.location.pathname : `#${nextScene.id}`);
     window.setTimeout(() => {
       transitionLock.current = false;
-    }, 920);
+    }, 760);
   }, [sceneIndex]);
 
   const moveWork = useCallback((direction: number) => {
@@ -352,10 +364,10 @@ export default function GalleryExperience() {
     if (event.pointerType === 'touch' || !experienceRef.current) return;
     const x = (event.clientX / window.innerWidth - .5) * 2;
     const y = (event.clientY / window.innerHeight - .5) * 2;
-    experienceRef.current.style.setProperty('--parallax-x', `${x * 7}px`);
-    experienceRef.current.style.setProperty('--parallax-y', `${y * 5}px`);
-    experienceRef.current.style.setProperty('--tilt-x', `${y * -.55}deg`);
-    experienceRef.current.style.setProperty('--tilt-y', `${x * .65}deg`);
+    experienceRef.current.style.setProperty('--parallax-x', `${x * 3}px`);
+    experienceRef.current.style.setProperty('--parallax-y', `${y * 2}px`);
+    experienceRef.current.style.setProperty('--tilt-x', `${y * -.22}deg`);
+    experienceRef.current.style.setProperty('--tilt-y', `${x * .26}deg`);
     experienceRef.current.style.setProperty('--light-x', `${50 + x * 16}%`);
     experienceRef.current.style.setProperty('--light-y', `${45 + y * 12}%`);
   };
@@ -379,12 +391,15 @@ export default function GalleryExperience() {
   };
 
   const upcomingScene = scenes[sceneIndex + 1];
+  const upcomingPreview = upcomingScene?.work ?? (
+    upcomingScene?.chapter ? getWork(chapterInfo[upcomingScene.chapter].coverSlug) : undefined
+  );
 
   return (
     <main
       ref={experienceRef}
       className="depth-experience"
-      data-direction={transitionCue?.direction ?? 'forward'}
+      data-direction={direction}
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       onPointerMove={handlePointerMove}
@@ -395,19 +410,6 @@ export default function GalleryExperience() {
           <span className="depth-opening-line" />
           <span className="depth-opening-title">线迹之间</span>
           <span className="depth-opening-subtitle">BETWEEN THE TRACES</span>
-        </div>
-      )}
-
-      {transitionCue && (
-        <div
-          className={`depth-ink-transition${transitionCue.chapterChange ? ' is-chapter-change' : ''}`}
-          data-chapter={transitionCue.chapter}
-          data-direction={transitionCue.direction}
-          key={transitionCue.id}
-          aria-hidden="true"
-        >
-          <span />
-          <i />
         </div>
       )}
 
@@ -452,7 +454,7 @@ export default function GalleryExperience() {
                     16 幅作品，一次只与你面对一幅。每次推进，下一张画会从纸面深处来到眼前。
                   </p>
                   <button type="button" className="depth-enter" onClick={() => goToScene(1)}>
-                    从第一幅作品进入 <ArrowRight size={18} aria-hidden="true" />
+                    进入序章 <ArrowRight size={18} aria-hidden="true" />
                   </button>
                 </div>
                 <p className="depth-gesture">滚轮 · 轻扫 · 方向键　逐幅推进</p>
@@ -460,12 +462,52 @@ export default function GalleryExperience() {
             );
           }
 
+          if (scene.kind === 'chapter' && scene.chapter) {
+            const info = chapterInfo[scene.chapter];
+            const chapterCover = getWork(info.coverSlug)!;
+            const chapterCount = exhibitionGroups.find((group) => group.chapter === scene.chapter)?.slugs.length ?? 0;
+
+            return (
+              <section
+                key={scene.id}
+                className={`depth-panel depth-chapter-intro depth-chapter-intro-${scene.chapter}`}
+                data-state={sceneState(index)}
+                style={{ '--depth-offset': offset } as DepthStyle}
+                aria-hidden={sceneIndex !== index}
+                inert={sceneIndex !== index ? true : undefined}
+              >
+                <figure className="depth-chapter-intro-art">
+                  <Image
+                    src={withBasePath(Math.abs(offset) <= 1 ? chapterCover.image.large : chapterCover.image.thumb)}
+                    alt=""
+                    fill
+                    sizes="(max-width: 650px) 100vw, 62vw"
+                  />
+                  <span aria-hidden="true" />
+                </figure>
+                <div className="depth-chapter-intro-copy">
+                  <p>{info.english} · {info.label}</p>
+                  <span className="depth-chapter-number">{info.number}</span>
+                  <h2>{info.title}</h2>
+                  <strong>{info.intro}</strong>
+                  <span className="depth-chapter-count">{String(chapterCount).padStart(2, '0')} WORK{chapterCount > 1 ? 'S' : ''}</span>
+                  <button type="button" onClick={() => goToScene(index + 1)}>
+                    进入本章 <ArrowRight size={17} aria-hidden="true" />
+                  </button>
+                </div>
+                <span className="depth-chapter-trace" aria-hidden="true" />
+              </section>
+            );
+          }
+
           if (scene.kind === 'work' && scene.work) {
+            const workSequence = exhibitionWorks.findIndex((work) => work.slug === scene.work?.slug) + 1;
             return (
               <section
                 key={scene.id}
                 className={`depth-panel depth-work depth-work-${scene.work.chapter}`}
                 data-accent={scene.work.accent}
+                data-work={scene.work.slug}
                 data-state={sceneState(index)}
                 style={{ '--depth-offset': offset } as DepthStyle}
                 aria-hidden={sceneIndex !== index}
@@ -473,7 +515,7 @@ export default function GalleryExperience() {
               >
                 <ArtworkScene
                   work={scene.work}
-                  sequence={index}
+                  sequence={workSequence}
                   offset={offset}
                   onOpen={openArtwork}
                   dialogOpen={Boolean(openSlug)}
@@ -544,9 +586,9 @@ export default function GalleryExperience() {
 
       {upcomingScene && (
         <button type="button" className="depth-next-portal" onClick={() => goToScene(sceneIndex + 1)}>
-          {upcomingScene.work && (
+          {upcomingPreview && (
             <span className="depth-next-preview" aria-hidden="true">
-              <Image src={withBasePath(upcomingScene.work.image.thumb)} alt="" fill sizes="80px" />
+              <Image src={withBasePath(upcomingPreview.image.thumb)} alt="" fill sizes="80px" />
             </span>
           )}
           <span className="depth-next-copy">
