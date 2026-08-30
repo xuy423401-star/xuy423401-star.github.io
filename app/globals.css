@@ -3708,24 +3708,6 @@ body:has(.depth-experience) {
     opacity: .22;
   }
 
-  .depth-chapter-intro-cycle .depth-chapter-intro-copy > *,
-  .depth-panel.depth-work-cycle .depth-work-copy > * {
-    opacity: 1 !important;
-    visibility: visible !important;
-    filter: none !important;
-    transform: none !important;
-    transition: none !important;
-    transition-delay: 0s !important;
-  }
-
-  .depth-chapter-intro-cycle .depth-chapter-number {
-    opacity: .42 !important;
-  }
-
-  .depth-chapter-intro-cycle .depth-chapter-intro-copy > strong {
-    opacity: .7 !important;
-  }
-
   .depth-chapter-intro-cycle .depth-chapter-trace {
     display: none;
   }
