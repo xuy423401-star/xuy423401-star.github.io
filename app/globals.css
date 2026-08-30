@@ -3743,3 +3743,23 @@ body:has(.depth-experience) {
     opacity: .04;
   }
 }
+
+/* Previous and next scenes stay behind the active sheet for symmetric navigation. */
+.depth-panel[data-state='next'],
+.depth-panel[data-state='past'] {
+  z-index: 3;
+}
+
+@media (max-width: 650px) {
+  .depth-panel[data-state='next'] {
+    opacity: 0;
+    filter: none;
+    transform: translate3d(0, 0, -180px) scale(.985);
+  }
+
+  .depth-panel[data-state='past'] {
+    opacity: 0;
+    filter: none;
+    transform: translate3d(0, 0, 180px) scale(1.015);
+  }
+}

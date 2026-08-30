@@ -191,7 +191,8 @@ function ArtworkScene({
             src={withBasePath(nearViewport ? work.image.large : work.image.thumb)}
             alt={work.alt}
             fill
-            preload={offset === 0}
+            loading="eager"
+            decoding="sync"
             sizes="(max-width: 720px) 100vw, 64vw"
           />
           <span className="depth-work-glint" aria-hidden="true" />
@@ -487,6 +488,8 @@ export default function GalleryExperience() {
                       src={withBasePath(chapterCover.image.large)}
                       alt=""
                       fill
+                      loading="eager"
+                      decoding="sync"
                       sizes="62vw"
                     />
                   </picture>
