@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import { ArrowLeft, ArrowRight, Maximize2 } from 'lucide-react';
 import { getWork, works } from '@/lib/works';
+import { withBasePath } from '@/lib/paths';
 import { notFound } from 'next/navigation';
 
 export function generateStaticParams() {
@@ -26,7 +27,7 @@ export async function generateMetadata({
       type: 'article',
       images: [
         {
-          url: work.image.large,
+          url: withBasePath(work.image.large),
           width: work.width,
           height: work.height,
           alt: work.alt,
@@ -37,7 +38,7 @@ export async function generateMetadata({
       card: 'summary_large_image',
       title: `${work.title}｜线迹之间`,
       description: work.short,
-      images: [work.image.large],
+      images: [withBasePath(work.image.large)],
     },
   };
 }
@@ -58,19 +59,19 @@ export default async function WorkPage({
   return (
     <main className="detail-page" data-accent={work.accent}>
       <header className="detail-header">
-        <a href="/#atlas" className="detail-back">
+        <a href={withBasePath('/#atlas')} className="detail-back">
           <ArrowLeft size={16} aria-hidden="true" />
           返回作品图谱
         </a>
-        <a href="/" className="detail-wordmark">线迹之间</a>
+        <a href={withBasePath('/')} className="detail-wordmark">线迹之间</a>
         <span>WORK {work.number} / {String(works.length).padStart(2, '0')}</span>
       </header>
 
       <article className="detail-layout">
         <figure className="detail-art">
-          <a href={work.image.large} target="_blank" rel="noreferrer" aria-label={`在新窗口打开《${work.title}》高清图`}>
+          <a href={withBasePath(work.image.large)} target="_blank" rel="noreferrer" aria-label={`在新窗口打开《${work.title}》高清图`}>
             <Image
-              src={work.image.large}
+              src={withBasePath(work.image.large)}
               alt={work.alt}
               width={work.width}
               height={work.height}
@@ -97,11 +98,11 @@ export default async function WorkPage({
       </article>
 
       <nav className="detail-navigation" aria-label="前后作品">
-        <a href={`/works/${previous.slug}`}>
+        <a href={withBasePath(`/works/${previous.slug}/`)}>
           <ArrowLeft size={18} aria-hidden="true" />
           <span><small>上一幅</small>{previous.title}</span>
         </a>
-        <a href={`/works/${next.slug}`}>
+        <a href={withBasePath(`/works/${next.slug}/`)}>
           <span><small>下一幅</small>{next.title}</span>
           <ArrowRight size={18} aria-hidden="true" />
         </a>

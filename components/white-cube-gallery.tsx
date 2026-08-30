@@ -1,11 +1,14 @@
 'use client';
 
+/* oxlint-disable react/react-compiler */
+
 import { Canvas, type ThreeEvent, useFrame, useLoader, useThree } from '@react-three/fiber';
 import { ArrowLeft, ChevronLeft, ChevronRight, Footprints, Grid3X3, Info, Move, X } from 'lucide-react';
 import Image from 'next/image';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { MathUtils, SRGBColorSpace, TextureLoader, Vector3 } from 'three';
 import { getWork, works, type Work } from '@/lib/works';
+import { withBasePath } from '@/lib/paths';
 
 type MoveKey = 'forward' | 'backward' | 'left' | 'right' | 'turnLeft' | 'turnRight';
 
@@ -102,7 +105,7 @@ function Artwork({
   z: number;
   onSelect: (slug: string) => void;
 }) {
-  const texture = useLoader(TextureLoader, work.image.large);
+  const texture = useLoader(TextureLoader, withBasePath(work.image.thumb));
   texture.colorSpace = SRGBColorSpace;
   const isPortrait = work.height > work.width * 1.08;
   const artWidth = isPortrait ? 2.15 : 3.05;
@@ -158,8 +161,8 @@ function GalleryArchitecture({ onSelect }: { onSelect: (slug: string) => void })
         castShadow
         position={[1, 7, 9]}
         intensity={2.1}
-        shadow-mapSize-width={2048}
-        shadow-mapSize-height={2048}
+        shadow-mapSize-width={1024}
+        shadow-mapSize-height={1024}
       />
 
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
@@ -299,7 +302,7 @@ export default function WhiteCubeGallery() {
     <main className="tour-shell">
       <Canvas
         shadows
-        dpr={[1, 1.75]}
+        dpr={[1, 1.4]}
         camera={{ position: [0, 1.7, 22], fov: 61, near: 0.1, far: 80 }}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
       >
@@ -311,7 +314,7 @@ export default function WhiteCubeGallery() {
       </Canvas>
 
       <header className="tour-header">
-        <a href="/" className="tour-back"><ArrowLeft size={16} /> 退出展厅</a>
+        <a href={withBasePath('/')} className="tour-back"><ArrowLeft size={16} /> 退出展厅</a>
         <strong>线迹之间</strong>
         <span>WHITE CUBE · 16 WORKS</span>
       </header>
@@ -342,7 +345,7 @@ export default function WhiteCubeGallery() {
             <Footprints size={17} aria-hidden="true" />
             进入漫游
           </button>
-          <a href="/#exhibition">改用策展长卷浏览</a>
+          <a href={withBasePath('/#exhibition')}>改用策展长卷浏览</a>
         </section>
       )}
 
@@ -350,7 +353,7 @@ export default function WhiteCubeGallery() {
         <div className="tour-hud">
           <span className="crosshair" aria-hidden="true" />
           <p><Move size={15} /> {touchMode ? '方向键移动 · 轻触作品' : 'WASD 移动 · 拖动鼠标环顾 · ESC 暂停'}</p>
-          <a href="/#atlas"><Grid3X3 size={15} /> 作品图谱</a>
+          <a href={withBasePath('/#atlas')}><Grid3X3 size={15} /> 作品图谱</a>
         </div>
       )}
 
@@ -395,7 +398,7 @@ export default function WhiteCubeGallery() {
             <X size={20} />
           </button>
           <div className="tour-card-image">
-            <Image src={selected.image.thumb} alt="" fill sizes="220px" />
+            <Image src={withBasePath(selected.image.thumb)} alt="" fill sizes="220px" />
           </div>
           <div className="tour-card-copy">
             <p>{selected.number} / {String(works.length).padStart(2, '0')}</p>
@@ -403,7 +406,7 @@ export default function WhiteCubeGallery() {
             <span>{selected.englishTitle}</span>
             <p>{selected.note}</p>
             {selected.context && <p className="context-note">{selected.context}</p>}
-            <a href={`/works/${selected.slug}`}><Info size={15} /> 完整作品页</a>
+            <a href={withBasePath(`/works/${selected.slug}/`)}><Info size={15} /> 完整作品页</a>
           </div>
           <div className="tour-card-nav">
             <button type="button" onClick={() => moveSelection(-1)} aria-label="上一幅作品"><ChevronLeft /></button>

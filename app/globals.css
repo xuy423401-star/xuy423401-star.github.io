@@ -1,12 +1,3 @@
-@import 'tailwindcss';
-
-@theme inline {
-  --color-background: var(--paper);
-  --color-foreground: var(--ink);
-  --font-sans: var(--font-ui);
-  --font-heading: var(--font-serif);
-}
-
 :root {
   --paper: #f1eee6;
   --paper-bright: #faf8f2;
@@ -650,7 +641,13 @@ img { max-width: 100%; }
   inset: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(17rem, 23rem);
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
   gap: 2rem;
+  margin: 0;
+  border: 0;
   padding: 2rem;
   background: rgba(12,12,11,.98);
   color: var(--paper-bright);

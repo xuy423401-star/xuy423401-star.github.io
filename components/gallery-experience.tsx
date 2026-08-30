@@ -2,8 +2,9 @@
 
 import Image from 'next/image';
 import { ArrowDown, ArrowUpRight, ChevronLeft, ChevronRight, Grid3X3, Maximize2, X } from 'lucide-react';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { chapters, getWork, works, type Work } from '@/lib/works';
+import { withBasePath } from '@/lib/paths';
 
 function WorkPanel({
   work,
@@ -29,7 +30,7 @@ function WorkPanel({
           aria-label={`放大查看《${work.title}》`}
         >
           <Image
-            src={work.image.large}
+            src={withBasePath(work.image.large)}
             alt={work.alt}
             width={work.width}
             height={work.height}
@@ -49,7 +50,7 @@ function WorkPanel({
           <p className="work-english">{work.englishTitle}</p>
         </div>
         <p className="work-short">{work.short}</p>
-        <a className="detail-link" href={`/works/${work.slug}`}>
+        <a className="detail-link" href={withBasePath(`/works/${work.slug}/`)}>
           作品详情 <ArrowUpRight size={14} aria-hidden="true" />
         </a>
       </div>
@@ -64,11 +65,11 @@ export default function GalleryExperience() {
   const openWork = useMemo(() => (openSlug ? getWork(openSlug) : undefined), [openSlug]);
   const openIndex = openWork ? works.findIndex((work) => work.slug === openWork.slug) : -1;
 
-  const moveLightbox = (direction: number) => {
+  const moveLightbox = useCallback((direction: number) => {
     if (openIndex < 0) return;
     const next = (openIndex + direction + works.length) % works.length;
     setOpenSlug(works[next].slug);
-  };
+  }, [openIndex]);
 
   useEffect(() => {
     const updateProgress = () => {
@@ -102,7 +103,7 @@ export default function GalleryExperience() {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [openSlug]);
+  }, [openWork, moveLightbox]);
 
   const prologue = getWork('08-night-sea')!;
 
@@ -113,7 +114,7 @@ export default function GalleryExperience() {
           线迹之间
         </a>
         <nav aria-label="主要导航">
-          <a href="/gallery">3D 展厅</a>
+          <a href={withBasePath('/gallery/')}>3D 展厅</a>
           <a href="#exhibition">策展路线</a>
           <a href="#atlas">作品图谱</a>
         </nav>
@@ -136,7 +137,7 @@ export default function GalleryExperience() {
             一根线穿过夜、目光、动物与记忆。沿着它走，纸上的世界会一页页醒来。
           </p>
           <div className="hero-actions">
-            <a className="enter-link" href="/gallery">
+            <a className="enter-link" href={withBasePath('/gallery/')}>
               <span>进入 3D 白盒子</span>
               <ArrowUpRight size={17} aria-hidden="true" />
             </a>
@@ -149,7 +150,7 @@ export default function GalleryExperience() {
 
         <figure className="hero-art">
           <Image
-            src={prologue.image.large}
+            src={withBasePath(prologue.image.large)}
             alt={prologue.alt}
             fill
             priority
@@ -222,7 +223,7 @@ export default function GalleryExperience() {
             >
               <span className="atlas-image">
                 <Image
-                  src={work.image.thumb}
+                  src={withBasePath(work.image.thumb)}
                   alt=""
                   fill
                   sizes="(max-width: 600px) 46vw, (max-width: 1000px) 30vw, 23vw"
@@ -264,14 +265,11 @@ export default function GalleryExperience() {
       </footer>
 
       {openWork && (
-        <div
+        <dialog
+          open
           className="lightbox"
-          role="dialog"
           aria-modal="true"
           aria-labelledby="lightbox-title"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) setOpenSlug(null);
-          }}
         >
           <button
             ref={closeRef}
@@ -285,7 +283,7 @@ export default function GalleryExperience() {
 
           <div className="lightbox-image">
             <Image
-              src={openWork.image.large}
+              src={withBasePath(openWork.image.large)}
               alt={openWork.alt}
               fill
               priority
@@ -299,7 +297,7 @@ export default function GalleryExperience() {
             <p className="work-english">{openWork.englishTitle}</p>
             <p>{openWork.note}</p>
             {openWork.context && <p className="context-note">{openWork.context}</p>}
-            <a href={`/works/${openWork.slug}`} className="lightbox-detail">
+            <a href={withBasePath(`/works/${openWork.slug}/`)} className="lightbox-detail">
               打开作品页 <ArrowUpRight size={15} aria-hidden="true" />
             </a>
           </aside>
@@ -312,7 +310,7 @@ export default function GalleryExperience() {
               <ChevronRight size={22} />
             </button>
           </div>
-        </div>
+        </dialog>
       )}
     </main>
   );
