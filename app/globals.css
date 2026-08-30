@@ -3984,6 +3984,24 @@ body:has(.depth-experience) {
 .depth-work-soundtrack { margin-top: 1rem; }
 .detail-soundtrack { margin-top: 1.25rem; }
 
+.depth-floating-soundtrack {
+  position: fixed;
+  z-index: 55;
+  top: 4.35rem;
+  right: 1.2rem;
+  width: min(15rem, calc(100vw - 2rem));
+  min-width: 0;
+  border-color: rgba(255,255,255,.35);
+  background: rgba(10,10,10,.78);
+  color: white;
+  box-shadow: 0 1rem 2.5rem rgba(0,0,0,.24);
+  backdrop-filter: blur(12px);
+}
+
+.depth-floating-soundtrack[aria-pressed='false'] .soundtrack-button-copy small { color: #f0c98b; opacity: .9; }
+
+.depth-floating-soundtrack:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+
 @keyframes soundtrack-level {
   from { height: 25%; opacity: .35; }
   to { height: 100%; opacity: .9; }
@@ -4000,6 +4018,7 @@ body:has(.depth-experience) {
   .soundtrack-button-icon { width: 1.75rem; height: 1.75rem; }
   .soundtrack-button-copy strong { font-size: .7rem; }
   .depth-work-soundtrack { margin-top: .55rem; }
+  .depth-floating-soundtrack { top: 4.25rem; right: 1rem; width: min(14rem, calc(100vw - 2rem)); }
 }
 
 @media (prefers-reduced-motion: reduce) {

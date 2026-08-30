@@ -24,8 +24,6 @@ import { flushSync } from 'react-dom';
 import { chapters, getWork, works, type Work } from '@/lib/works';
 import { withBasePath } from '@/lib/paths';
 import { SoundtrackButton, useArtworkAudio } from '@/components/artwork-audio';
-import type { PlaybackStatus } from '@/components/artwork-audio';
-import type { ArtworkSoundtrack } from '@/lib/soundtracks';
 
 const chapterInfo = {
   prologue: {
@@ -168,18 +166,12 @@ function ArtworkScene({
   offset,
   onOpen,
   dialogOpen,
-  soundtrackStatus,
-  onToggleSoundtrack,
-  soundtrack,
 }: {
   work: Work;
   sequence: number;
   offset: number;
   onOpen: (slug: string) => void;
   dialogOpen: boolean;
-  soundtrackStatus: PlaybackStatus;
-  onToggleSoundtrack: () => void;
-  soundtrack?: ArtworkSoundtrack;
 }) {
   const chapter = chapterInfo[work.chapter];
   const nearViewport = Math.abs(offset) <= 1;
@@ -216,12 +208,6 @@ function ArtworkScene({
         <i>{work.englishTitle}</i>
         <strong>{work.short}</strong>
         <span className="depth-work-note">{work.note.split('。')[0]}。</span>
-        <SoundtrackButton
-          soundtrack={soundtrack}
-          status={offset === 0 ? soundtrackStatus : 'idle'}
-          onToggle={onToggleSoundtrack}
-          className="depth-work-soundtrack"
-        />
         {work.context && <small>{work.context}</small>}
         <button type="button" onClick={() => onOpen(work.slug)}>
           放大作品与说明 <ArrowUpRight size={15} aria-hidden="true" />
@@ -442,6 +428,13 @@ export default function GalleryExperience() {
         </a>
       </header>
 
+      <SoundtrackButton
+        soundtrack={soundtrackPlayback.soundtrack}
+        status={soundtrackPlayback.status}
+        onToggle={soundtrackPlayback.toggle}
+        className="depth-floating-soundtrack"
+      />
+
       <div className="depth-stage" aria-live="polite">
         {scenes.map((scene, index) => {
           const offset = index - sceneIndex;
@@ -547,9 +540,6 @@ export default function GalleryExperience() {
                   offset={offset}
                   onOpen={openArtwork}
                   dialogOpen={Boolean(openSlug)}
-                  soundtrackStatus={soundtrackPlayback.status}
-                  onToggleSoundtrack={soundtrackPlayback.toggle}
-                  soundtrack={soundtrackPlayback.soundtrack}
                 />
               </section>
             );
