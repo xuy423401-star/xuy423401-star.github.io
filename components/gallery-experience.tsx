@@ -427,6 +427,10 @@ export default function GalleryExperience() {
         {scenes.map((scene, index) => {
           const offset = index - sceneIndex;
 
+          // Keep only the transition neighbors mounted. Holding every full-screen
+          // artwork in the DOM exhausts decoded-image and compositor memory on phones.
+          if (Math.abs(offset) > 1) return null;
+
           if (scene.kind === 'cover') {
             return (
               <section
