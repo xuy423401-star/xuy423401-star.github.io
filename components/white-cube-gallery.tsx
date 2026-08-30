@@ -301,7 +301,7 @@ export default function WhiteCubeGallery() {
   return (
     <main className="tour-shell">
       <Canvas
-        shadows
+        shadows="basic"
         dpr={[1, 1.4]}
         camera={{ position: [0, 1.7, 22], fov: 61, near: 0.1, far: 80 }}
         gl={{ antialias: true, powerPreference: 'high-performance' }}
