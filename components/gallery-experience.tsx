@@ -20,6 +20,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { flushSync } from 'react-dom';
 import { chapters, getWork, works, type Work } from '@/lib/works';
 import { withBasePath } from '@/lib/paths';
 
@@ -61,6 +62,22 @@ type DepthStyle = CSSProperties & {
   '--depth-offset': number;
 };
 
+type TransitionCue = {
+  id: number;
+  chapter: Work['chapter'] | 'cover' | 'about';
+  direction: 'forward' | 'backward';
+  chapterChange: boolean;
+};
+
+type ViewTransitionDocument = Document & {
+  startViewTransition?: (update: () => void) => void;
+};
+
+function getSceneChapter(scene: Scene): TransitionCue['chapter'] {
+  if (scene.kind === 'work' && scene.work) return scene.work.chapter;
+  return scene.kind === 'about' ? 'about' : 'cover';
+}
+
 function WorkDialog({
   work,
   onClose,
@@ -74,6 +91,7 @@ function WorkDialog({
 }) {
   return (
     <dialog open className="lightbox depth-lightbox" aria-modal="true" aria-labelledby="lightbox-title">
+      <div className="depth-lightbox-veil" aria-hidden="true" />
       <button
         ref={closeRef}
         type="button"
@@ -84,7 +102,7 @@ function WorkDialog({
         <X size={20} />
       </button>
 
-      <div className="lightbox-image">
+      <div className="lightbox-image" key={`image-${work.slug}`}>
         <Image
           src={withBasePath(work.image.large)}
           alt={work.alt}
@@ -94,7 +112,7 @@ function WorkDialog({
         />
       </div>
 
-      <aside className="lightbox-copy">
+      <aside className="lightbox-copy" key={`copy-${work.slug}`}>
         <p className="lightbox-count">{work.number} / {String(works.length).padStart(2, '0')}</p>
         <h2 id="lightbox-title">{work.title}</h2>
         <p className="work-english">{work.englishTitle}</p>
@@ -122,11 +140,13 @@ function ArtworkScene({
   sequence,
   offset,
   onOpen,
+  dialogOpen,
 }: {
   work: Work;
   sequence: number;
   offset: number;
   onOpen: (slug: string) => void;
+  dialogOpen: boolean;
 }) {
   const chapter = chapterInfo[work.chapter];
   const nearViewport = Math.abs(offset) <= 1;
@@ -139,13 +159,19 @@ function ArtworkScene({
         onClick={() => onOpen(work.slug)}
         aria-label={`放大查看《${work.title}》`}
       >
-        <Image
-          src={withBasePath(nearViewport ? work.image.large : work.image.thumb)}
-          alt={work.alt}
-          fill
-          preload={offset === 0}
-          sizes="(max-width: 720px) 100vw, 64vw"
-        />
+        <span
+          className="depth-work-art-surface"
+          style={{ viewTransitionName: offset === 0 && !dialogOpen ? 'gallery-artwork' : 'none' }}
+        >
+          <Image
+            src={withBasePath(nearViewport ? work.image.large : work.image.thumb)}
+            alt={work.alt}
+            fill
+            preload={offset === 0}
+            sizes="(max-width: 720px) 100vw, 64vw"
+          />
+          <span className="depth-work-glint" aria-hidden="true" />
+        </span>
         <span><Maximize2 size={14} aria-hidden="true" /> 查看细节</span>
       </button>
 
@@ -172,23 +198,64 @@ function ArtworkScene({
 export default function GalleryExperience() {
   const [sceneIndex, setSceneIndex] = useState(0);
   const [openSlug, setOpenSlug] = useState<string | null>(null);
+  const [showOpening, setShowOpening] = useState(true);
+  const [transitionCue, setTransitionCue] = useState<TransitionCue | null>(null);
   const transitionLock = useRef(false);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const experienceRef = useRef<HTMLElement>(null);
+  const transitionId = useRef(0);
   const openWork = useMemo(() => (openSlug ? getWork(openSlug) : undefined), [openSlug]);
   const openIndex = openWork ? exhibitionWorks.findIndex((work) => work.slug === openWork.slug) : -1;
   const coverWork = getWork('08-night-sea')!;
+
+  const runViewTransition = useCallback((update: () => void) => {
+    const viewTransitionDocument = document as ViewTransitionDocument;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (!viewTransitionDocument.startViewTransition || reduceMotion) {
+      update();
+      return;
+    }
+
+    viewTransitionDocument.startViewTransition(() => {
+      flushSync(update);
+    });
+  }, []);
+
+  const openArtwork = useCallback((slug: string) => {
+    runViewTransition(() => setOpenSlug(slug));
+  }, [runViewTransition]);
+
+  const closeArtwork = useCallback(() => {
+    runViewTransition(() => setOpenSlug(null));
+  }, [runViewTransition]);
 
   const goToScene = useCallback((target: number) => {
     if (transitionLock.current) return;
     const next = Math.max(0, Math.min(scenes.length - 1, target));
     if (next === sceneIndex) return;
 
+    const currentScene = scenes[sceneIndex];
+    const nextScene = scenes[next];
+    const direction = next > sceneIndex ? 'forward' : 'backward';
+    const nextChapter = getSceneChapter(nextScene);
+    const currentChapter = getSceneChapter(currentScene);
+
+    transitionId.current += 1;
+    setTransitionCue({
+      id: transitionId.current,
+      chapter: nextChapter,
+      direction,
+      chapterChange: currentChapter !== nextChapter,
+    });
+
     transitionLock.current = true;
     setSceneIndex(next);
+    window.history.replaceState(null, '', next === 0 ? window.location.pathname : `#${nextScene.id}`);
     window.setTimeout(() => {
       transitionLock.current = false;
-    }, 820);
+    }, 920);
   }, [sceneIndex]);
 
   const moveWork = useCallback((direction: number) => {
@@ -211,6 +278,23 @@ export default function GalleryExperience() {
   }, []);
 
   useEffect(() => {
+    const deepLink = window.location.hash.length > 1;
+    const hasSeenOpening = window.sessionStorage.getItem('xianji-opening-seen') === '1';
+
+    if (deepLink || hasSeenOpening || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setShowOpening(false);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      window.sessionStorage.setItem('xianji-opening-seen', '1');
+      setShowOpening(false);
+    }, 1850);
+
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
     const onWheel = (event: WheelEvent) => {
       if (openWork || Math.abs(event.deltaY) < 18) return;
       event.preventDefault();
@@ -219,7 +303,7 @@ export default function GalleryExperience() {
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (openWork) {
-        if (event.key === 'Escape') setOpenSlug(null);
+        if (event.key === 'Escape') closeArtwork();
         if (event.key === 'ArrowLeft') moveWork(-1);
         if (event.key === 'ArrowRight') moveWork(1);
         return;
@@ -243,7 +327,7 @@ export default function GalleryExperience() {
       window.removeEventListener('wheel', onWheel);
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [goToScene, moveWork, openWork, sceneIndex]);
+  }, [closeArtwork, goToScene, moveWork, openWork, sceneIndex]);
 
   useEffect(() => {
     if (openWork) closeRef.current?.focus();
@@ -264,6 +348,28 @@ export default function GalleryExperience() {
     if (Math.abs(dominant) >= 42) goToScene(sceneIndex + (dominant < 0 ? 1 : -1));
   };
 
+  const handlePointerMove = (event: React.PointerEvent<HTMLElement>) => {
+    if (event.pointerType === 'touch' || !experienceRef.current) return;
+    const x = (event.clientX / window.innerWidth - .5) * 2;
+    const y = (event.clientY / window.innerHeight - .5) * 2;
+    experienceRef.current.style.setProperty('--parallax-x', `${x * 7}px`);
+    experienceRef.current.style.setProperty('--parallax-y', `${y * 5}px`);
+    experienceRef.current.style.setProperty('--tilt-x', `${y * -.55}deg`);
+    experienceRef.current.style.setProperty('--tilt-y', `${x * .65}deg`);
+    experienceRef.current.style.setProperty('--light-x', `${50 + x * 16}%`);
+    experienceRef.current.style.setProperty('--light-y', `${45 + y * 12}%`);
+  };
+
+  const resetPointerMotion = () => {
+    if (!experienceRef.current) return;
+    experienceRef.current.style.setProperty('--parallax-x', '0px');
+    experienceRef.current.style.setProperty('--parallax-y', '0px');
+    experienceRef.current.style.setProperty('--tilt-x', '0deg');
+    experienceRef.current.style.setProperty('--tilt-y', '0deg');
+    experienceRef.current.style.setProperty('--light-x', '50%');
+    experienceRef.current.style.setProperty('--light-y', '45%');
+  };
+
   const sceneState = (index: number) => {
     const offset = index - sceneIndex;
     if (offset < 0) return 'past';
@@ -272,8 +378,39 @@ export default function GalleryExperience() {
     return 'far';
   };
 
+  const upcomingScene = scenes[sceneIndex + 1];
+
   return (
-    <main className="depth-experience" onPointerDown={handlePointerDown} onPointerUp={handlePointerUp}>
+    <main
+      ref={experienceRef}
+      className="depth-experience"
+      data-direction={transitionCue?.direction ?? 'forward'}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerMove={handlePointerMove}
+      onPointerLeave={resetPointerMotion}
+    >
+      {showOpening && (
+        <div className="depth-opening" aria-hidden="true">
+          <span className="depth-opening-line" />
+          <span className="depth-opening-title">线迹之间</span>
+          <span className="depth-opening-subtitle">BETWEEN THE TRACES</span>
+        </div>
+      )}
+
+      {transitionCue && (
+        <div
+          className={`depth-ink-transition${transitionCue.chapterChange ? ' is-chapter-change' : ''}`}
+          data-chapter={transitionCue.chapter}
+          data-direction={transitionCue.direction}
+          key={transitionCue.id}
+          aria-hidden="true"
+        >
+          <span />
+          <i />
+        </div>
+      )}
+
       <header className="depth-header">
         <button type="button" className="depth-wordmark" onClick={() => goToScene(0)}>
           线迹之间
@@ -338,7 +475,8 @@ export default function GalleryExperience() {
                   work={scene.work}
                   sequence={index}
                   offset={offset}
-                  onOpen={setOpenSlug}
+                  onOpen={openArtwork}
+                  dialogOpen={Boolean(openSlug)}
                 />
               </section>
             );
@@ -361,7 +499,9 @@ export default function GalleryExperience() {
                   16 幅作品已经逐一与你相遇。现在可以进入白盒空间，自由走回任何一幅画前。
                 </span>
                 <a href={withBasePath('/gallery/')} className="depth-gallery-link">
-                  进入 3D 白盒子漫游 <ArrowUpRight size={18} aria-hidden="true" />
+                  <span className="depth-gallery-door" aria-hidden="true"><i /></span>
+                  <span>穿过空间门<br /><b>进入 3D 白盒子漫游</b></span>
+                  <ArrowUpRight size={18} aria-hidden="true" />
                 </a>
                 <button type="button" onClick={() => goToScene(0)} className="depth-restart">
                   从第一幅重新观看
@@ -402,10 +542,17 @@ export default function GalleryExperience() {
         </button>
       </div>
 
-      {sceneIndex < scenes.length - 1 && (
+      {upcomingScene && (
         <button type="button" className="depth-next-portal" onClick={() => goToScene(sceneIndex + 1)}>
-          <span>{scenes[sceneIndex + 1].kind === 'work' ? '下一幅作品' : '下一展页'} · {String(sceneIndex + 2).padStart(2, '0')}</span>
-          <strong>{scenes[sceneIndex + 1].title}</strong>
+          {upcomingScene.work && (
+            <span className="depth-next-preview" aria-hidden="true">
+              <Image src={withBasePath(upcomingScene.work.image.thumb)} alt="" fill sizes="80px" />
+            </span>
+          )}
+          <span className="depth-next-copy">
+            <small>{upcomingScene.kind === 'work' ? '下一幅作品' : '下一展页'} · {String(sceneIndex + 2).padStart(2, '0')}</small>
+            <strong>{upcomingScene.title}</strong>
+          </span>
           <ArrowRight size={17} aria-hidden="true" />
         </button>
       )}
@@ -413,7 +560,7 @@ export default function GalleryExperience() {
       {openWork && (
         <WorkDialog
           work={openWork}
-          onClose={() => setOpenSlug(null)}
+          onClose={closeArtwork}
           onMove={moveWork}
           closeRef={closeRef}
         />
