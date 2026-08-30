@@ -3007,6 +3007,71 @@ body:has(.depth-experience) {
   }
 }
 
+/* Keep chapter three stable on mobile GPUs: preserve depth, avoid filter recompositing. */
+@media (max-width: 650px) {
+  .depth-panel.depth-chapter-intro-cycle,
+  .depth-panel.depth-work-cycle {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    filter: none !important;
+    transition:
+      transform .62s cubic-bezier(.2,.72,.2,1),
+      opacity .34s linear;
+  }
+
+  .depth-chapter-intro-cycle .depth-chapter-intro-art,
+  .depth-chapter-intro-cycle .depth-chapter-intro-copy {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+
+  .depth-chapter-intro-cycle .depth-chapter-intro-art picture {
+    display: contents;
+  }
+
+  .depth-chapter-intro-cycle .depth-chapter-intro-art img {
+    animation: none !important;
+    filter: grayscale(.42) sepia(.08) contrast(1.04) brightness(.76);
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .depth-chapter-intro-cycle .depth-chapter-intro-art > span {
+    mix-blend-mode: normal;
+    opacity: .22;
+  }
+
+  .depth-chapter-intro-cycle .depth-chapter-intro-copy > * {
+    filter: none !important;
+    transform: none !important;
+    transition: opacity .2s linear !important;
+    transition-delay: 0s !important;
+  }
+
+  .depth-chapter-intro-cycle .depth-chapter-trace {
+    display: none;
+  }
+
+  .depth-panel.depth-work-cycle .depth-work-art-surface {
+    animation: none !important;
+    filter: none !important;
+    transform: none !important;
+  }
+
+  .depth-panel.depth-work-cycle .depth-work-copy > * {
+    filter: none !important;
+    transform: none !important;
+    transition: opacity .2s linear !important;
+    transition-delay: 0s !important;
+  }
+
+  .depth-panel[data-state='current'].depth-work-cycle .depth-work-watermark {
+    animation: none !important;
+    filter: none !important;
+    opacity: .04;
+  }
+}
+
 /* Keep chapter numbers in their own line instead of behind the title. */
 
 .depth-chapter-number {

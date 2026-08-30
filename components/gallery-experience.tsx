@@ -477,12 +477,15 @@ export default function GalleryExperience() {
                 inert={sceneIndex !== index ? true : undefined}
               >
                 <figure className="depth-chapter-intro-art">
-                  <Image
-                    src={withBasePath(Math.abs(offset) <= 1 ? chapterCover.image.large : chapterCover.image.thumb)}
-                    alt=""
-                    fill
-                    sizes="(max-width: 650px) 100vw, 62vw"
-                  />
+                  <picture>
+                    <source media="(max-width: 650px)" srcSet={withBasePath(chapterCover.image.thumb)} />
+                    <Image
+                      src={withBasePath(chapterCover.image.large)}
+                      alt=""
+                      fill
+                      sizes="62vw"
+                    />
+                  </picture>
                   <span aria-hidden="true" />
                 </figure>
                 <div className="depth-chapter-intro-copy">
