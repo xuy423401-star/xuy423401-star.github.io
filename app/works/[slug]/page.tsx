@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Maximize2 } from 'lucide-react';
 import { getWork, works } from '@/lib/works';
 import { withBasePath } from '@/lib/paths';
 import { notFound } from 'next/navigation';
+import { StandaloneArtworkAudio } from '@/components/artwork-audio';
 
 export function generateStaticParams() {
   return works.map((work) => ({ slug: work.slug }));
@@ -88,6 +89,7 @@ export default async function WorkPage({
           <p className="work-english">{work.englishTitle}</p>
           <p className="detail-short">{work.short}</p>
           {work.context && <p className="context-note">{work.context}</p>}
+          <StandaloneArtworkAudio slug={work.slug} />
           <a className="detail-reading-link" href="#reading">
             阅读完整解读 <ArrowRight size={15} aria-hidden="true" />
           </a>
