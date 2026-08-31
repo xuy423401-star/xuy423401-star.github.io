@@ -4012,6 +4012,21 @@ body:has(.depth-experience) {
   width: auto;
 }
 
+.photo-floating-soundtrack {
+  position: fixed;
+  z-index: 55;
+  top: 4.35rem;
+  right: 1.2rem;
+  width: min(15rem, calc(100vw - 2rem));
+  border-color: rgba(255,255,255,.4);
+  background: rgba(10,10,10,.78);
+  color: white;
+  box-shadow: 0 1rem 2.5rem rgba(0,0,0,.24);
+  backdrop-filter: blur(12px);
+}
+
+.photo-floating-soundtrack.is-collapsed { width: auto; border: 0; background: none; box-shadow: none; }
+
 .soundtrack-button-icon {
   display: grid;
   width: 2rem;
@@ -4092,6 +4107,7 @@ body:has(.depth-experience) {
   .soundtrack-collapse-tab { width: 2.45rem; height: 2.45rem; }
   .depth-work-soundtrack { margin-top: .55rem; }
   .depth-floating-soundtrack { top: 4.25rem; right: 1rem; width: min(14rem, calc(100vw - 2rem)); }
+  .photo-floating-soundtrack { top: 4.1rem; right: 1rem; width: min(14rem, calc(100vw - 2rem)); }
 }
 
 @media (prefers-reduced-motion: reduce) {

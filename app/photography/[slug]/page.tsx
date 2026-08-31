@@ -4,6 +4,8 @@ import { ArrowLeft, ArrowRight, Maximize2 } from 'lucide-react';
 import { getPhotographyWork, photographyWorks } from '@/lib/photography';
 import { withBasePath } from '@/lib/paths';
 import { notFound } from 'next/navigation';
+import { StandalonePhotographyAudio } from '@/components/photography-audio';
+import { photographyChapters } from '@/lib/photography';
 
 export function generateStaticParams() {
   return photographyWorks.map(work => ({ slug: work.slug }));
@@ -44,6 +46,11 @@ export default async function PhotographyWorkPage({ params }: { params: Promise<
           <i>{work.englishTitle}</i>
           <strong>{work.short}</strong>
           <p>{work.note}</p>
+          <StandalonePhotographyAudio
+            chapter={work.chapter}
+            chapterIndex={photographyChapters.find(chapter => chapter.id === work.chapter)?.works.findIndex(item => item.slug === work.slug) ?? 0}
+            chapterCount={photographyChapters.find(chapter => chapter.id === work.chapter)?.works.length ?? 0}
+          />
           <dl><div><dt>类型</dt><dd>摄影作品</dd></div><div><dt>章节</dt><dd>{work.chapter}</dd></div><div><dt>编号</dt><dd>{work.number} / {String(photographyWorks.length).padStart(2, '0')}</dd></div></dl>
         </section>
       </article>

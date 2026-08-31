@@ -7,6 +7,8 @@ import { ArrowLeft, ArrowRight, ArrowUpRight, Maximize2 } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { photographyChapters, photographyWorks, type PhotoChapter, type PhotographyWork } from '@/lib/photography';
 import { withBasePath } from '@/lib/paths';
+import { PhotographySoundtrackButton, usePhotographyAudio } from '@/components/photography-audio';
+import { getPhotographySoundtrack } from '@/lib/photography-soundtracks';
 
 type PhotoScene =
   | { id: 'cover'; kind: 'cover'; title: string; label: string }
@@ -83,6 +85,16 @@ export default function PhotographyExperience() {
   const total = scenes.length;
   const currentScene = scenes[sceneIndex];
   const nextScene = scenes[sceneIndex + 1];
+  const currentSoundtrack = currentScene.kind === 'chapter'
+    ? getPhotographySoundtrack(currentScene.chapter.id, 0, currentScene.chapter.works.length)
+    : currentScene.kind === 'photo'
+      ? getPhotographySoundtrack(
+        currentScene.chapter.id,
+        currentScene.chapter.works.findIndex(work => work.slug === currentScene.work.slug),
+        currentScene.chapter.works.length,
+      )
+      : undefined;
+  const soundtrackPlayback = usePhotographyAudio(currentSoundtrack);
 
   const goToScene = useCallback((target: number) => {
     if (transitionLock.current) return;
@@ -148,6 +160,12 @@ export default function PhotographyExperience() {
         <span>{currentScene.label} · {currentScene.title}</span>
         <a href={withBasePath('/gallery/')} className="photo-cube-link">3D 白盒子 <ArrowUpRight size={14} aria-hidden="true" /></a>
       </header>
+
+      <PhotographySoundtrackButton
+        soundtrack={currentSoundtrack}
+        status={soundtrackPlayback.status}
+        onToggle={soundtrackPlayback.toggle}
+      />
 
       <div className="photo-stage" aria-live="polite">
         {scenes.map((scene, index) => {
