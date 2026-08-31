@@ -10,11 +10,11 @@ export type PhotographySoundtrack = {
 export const photographyChapterSoundtracks: Record<PhotoChapterId, [PhotographySoundtrack, PhotographySoundtrack]> = {
   desert: [
     { title: '任我行', file: '/photography-audio/任我行.mp3', mood: '辽阔、自由与独行', source: '用户提供音频' },
-    { title: '逃亡', file: '/photography-audio/逃亡.mp3', mood: '远行、速度与离开', source: '用户提供音频' },
+    { title: '任我行', file: '/photography-audio/任我行.mp3', mood: '辽阔、自由与独行', source: '用户提供音频' },
   ],
   water: [
     { title: '落花流水', file: '/photography-audio/落花流水.mp3', mood: '流动、相遇与时间', source: '用户提供音频' },
-    { title: '雨天', file: '/photography-audio/雨天.mp3', mood: '雨声、回忆与情绪', source: '用户提供音频' },
+    { title: '落花流水', file: '/photography-audio/落花流水.mp3', mood: '流动、相遇与时间', source: '用户提供音频' },
   ],
   daily: [
     { title: '单车', file: '/photography-audio/单车.mp3', mood: '陪伴、生活与温度', source: '用户提供音频' },
