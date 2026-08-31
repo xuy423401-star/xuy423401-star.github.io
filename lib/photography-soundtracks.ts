@@ -17,7 +17,7 @@ export const photographyChapterSoundtracks: Record<PhotoChapterId, [PhotographyS
     { title: '雨天', file: '/photography-audio/雨天.mp3', mood: '雨声、回忆与情绪', source: '用户提供音频' },
   ],
   daily: [
-    { title: '第一天', file: '/photography-audio/第一天.mp3', mood: '明亮、日常与出发', source: '用户提供音频' },
+    { title: '单车', file: '/photography-audio/单车.mp3', mood: '陪伴、生活与温度', source: '用户提供音频' },
     { title: '单车', file: '/photography-audio/单车.mp3', mood: '陪伴、生活与温度', source: '用户提供音频' },
   ],
   trace: [
