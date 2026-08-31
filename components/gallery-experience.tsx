@@ -4,6 +4,7 @@
 
 import Image from 'next/image';
 import {
+  Aperture,
   ArrowLeft,
   ArrowRight,
   ArrowUpRight,
@@ -423,9 +424,10 @@ export default function GalleryExperience() {
           线迹之间
         </button>
         <span>{scenes[sceneIndex].label} · {scenes[sceneIndex].title}</span>
-        <a href={withBasePath('/gallery/')}>
-          3D 白盒子 <ArrowUpRight size={14} aria-hidden="true" />
-        </a>
+        <nav className="depth-header-links" aria-label="展览入口">
+          <a href={withBasePath('/photography/')}><Aperture size={14} aria-hidden="true" /> 摄影展</a>
+          <a href={withBasePath('/gallery/')}>3D 白盒子 <ArrowUpRight size={14} aria-hidden="true" /></a>
+        </nav>
       </header>
 
       <SoundtrackButton

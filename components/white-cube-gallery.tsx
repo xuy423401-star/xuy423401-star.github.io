@@ -3,7 +3,7 @@
 /* oxlint-disable react/react-compiler */
 
 import { Canvas, type ThreeEvent, useFrame, useLoader, useThree } from '@react-three/fiber';
-import { ArrowLeft, ChevronLeft, ChevronRight, Footprints, Grid3X3, Info, Move, X } from 'lucide-react';
+import { Aperture, ArrowLeft, ChevronLeft, ChevronRight, Footprints, Grid3X3, Info, Move, X } from 'lucide-react';
 import Image from 'next/image';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { MathUtils, SRGBColorSpace, TextureLoader, Vector3 } from 'three';
@@ -316,7 +316,7 @@ export default function WhiteCubeGallery() {
       <header className="tour-header">
         <a href={withBasePath('/')} className="tour-back"><ArrowLeft size={16} /> 退出展厅</a>
         <strong>线迹之间</strong>
-        <span>WHITE CUBE · 16 WORKS</span>
+        <span><a href={withBasePath('/photography/')}><Aperture size={14} /> 摄影展</a> · WHITE CUBE · 16 WORKS</span>
       </header>
 
       <div className="tour-room-index" aria-hidden="true">
